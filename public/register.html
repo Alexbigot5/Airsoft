@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Book a game day — Coyote Ridge Airsoft</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <nav class="topbar">
+    <a class="brand" href="/">Coyote <span>Ridge</span> Airsoft</a>
+    <a class="small muted" href="/">← Back to the site</a>
+  </nav>
+
+  <main class="wrap">
+    <h1>Book a game day</h1>
+    <p class="muted">Pick a date, choose a package, and pay. Everyone in your party
+      signs their own waiver before check-in.</p>
+
+    <div id="cancelled" class="notice hidden">
+      Checkout was cancelled. Your spots are held for a short while — pick your
+      game day again to finish paying.
+    </div>
+    <div id="error" class="notice error hidden" role="alert"></div>
+
+    <h2>1. Game day</h2>
+    <div id="events" class="grid" aria-busy="true">
+      <p class="muted">Loading the schedule…</p>
+    </div>
+
+    <h2>2. Package</h2>
+    <div id="packages" class="grid two"></div>
+
+    <h2>3. Your details</h2>
+    <form id="form" class="panel" novalidate>
+      <label for="name">Full name</label>
+      <input class="input" id="name" name="name" autocomplete="name" required>
+
+      <label for="email">Email</label>
+      <input class="input" id="email" name="email" type="email" autocomplete="email" required>
+      <p class="muted small">Your booking reference and the waiver links go here.</p>
+
+      <label for="phone">Phone (optional)</label>
+      <input class="input" id="phone" name="phone" type="tel" autocomplete="tel">
+
+      <label for="partySize">How many players?</label>
+      <input class="input" id="partySize" name="partySize" type="number" min="1" max="20" value="1" required>
+      <p class="muted small">One booking covers your whole squad. Each player still
+        signs their own waiver.</p>
+
+      <p class="total" id="total">$0.00</p>
+      <button class="btn btn-block" id="submit" type="submit">Continue to payment</button>
+    </form>
+  </main>
+
+  <script src="/register.js" defer></script>
+</body>
+</html>

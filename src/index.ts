@@ -33,12 +33,16 @@ app.route('/api', waivers);
 app.route('/api', checkout);
 app.route('/api/admin', admin);
 
+// The bundled page is also reachable by its own filename; send it to "/" so
+// nobody gets the copy without the site hook and its mock booking flow.
+app.get('/index.html', (c) => c.redirect('/', 301));
+
 /**
- * The marketing page is a 3 MB bundled export that we treat as read-only. It is
- * copied into public/index.html by scripts/sync-site.mjs and served here with a
- * single <script> appended, which is what redirects its mock "Book" buttons at
- * the real registration flow. Streaming through HTMLRewriter avoids ever
- * holding the whole document in memory.
+ * The marketing page is a 3 MB bundled export that we treat as read-only: it
+ * lives at public/index.html and is served here with a single <script>
+ * appended, which is what redirects its mock "Book" buttons at the real
+ * registration flow. Streaming through HTMLRewriter avoids ever holding the
+ * whole document in memory.
  */
 app.get('/', async (c) => {
   const asset = await c.env.ASSETS.fetch(new Request(new URL('/index.html', c.req.url)));

@@ -3,7 +3,7 @@
 Marketing site plus a Cloudflare Workers + D1 backend for player registration,
 waivers and payments.
 
-The site itself (`Coyote Ridge Airsoft.html`) is a bundled export and is treated
+The site itself (`public/index.html`) is a bundled export and is treated
 as **read-only** — the Worker serves it and injects one script that points its
 "Book" buttons at the real flow. Everything under `src/`, `public/` and
 `migrations/` is the part you maintain.
@@ -24,8 +24,6 @@ as **read-only** — the Worker serves it and injects one script that points its
 ## Layout
 
 ```
-Coyote Ridge Airsoft.html   the marketing page (read-only, never edited)
-scripts/sync-site.mjs       copies it into public/index.html for Workers Assets
 wrangler.jsonc              bindings, cron trigger, vars
 migrations/                 D1 schema and seed data
 seeds/dev_events.sql        sample game days for local use (not a migration)
@@ -35,7 +33,10 @@ src/
   stripe.ts                 Checkout + webhook verification (fetch, no SDK)
   sweeper.ts                releases spots held by abandoned checkouts
   routes/                   events, bookings, waivers, checkout, admin
-public/                     register / waiver / success / admin pages, site-hook
+public/
+  index.html                the marketing page (read-only, never edited)
+  site-hook.js              injected into it to redirect the mock "Book" buttons
+  register / waiver / success / admin pages, app.css
 test/api.spec.ts            the rules that cost money or create liability
 ```
 
@@ -109,8 +110,16 @@ npx wrangler secret put STRIPE_WEBHOOK_SECRET
 npx wrangler deploy
 ```
 
-Set `PUBLIC_BASE_URL` in `wrangler.jsonc` to the real origin — it is what
-Stripe redirect and waiver links are built from.
+`PUBLIC_BASE_URL` can stay empty: Stripe redirect and waiver links are built
+from the origin of the incoming request, which is correct on workers.dev and in
+local dev alike. Set it only if you put a custom domain in front and want every
+link to use that canonical origin instead.
+
+If you deploy through **Workers Builds** (connected repo) rather than from your
+machine, note that it runs `wrangler deploy` directly — npm lifecycle hooks do
+not fire, so anything the deploy depends on has to be committed, not generated
+at deploy time. The Worker `name` in `wrangler.jsonc` also has to match the
+Workers Builds project name, or CI overrides it on every build.
 
 Then add a webhook endpoint in the Stripe dashboard pointing at
 `https://<your-worker>/api/stripe/webhook`, subscribed to:

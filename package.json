@@ -1,0 +1,28 @@
+{
+  "name": "coyote-ridge-airsoft",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync-site": "node scripts/sync-site.mjs",
+    "predev": "npm run sync-site",
+    "dev": "wrangler dev",
+    "predeploy": "npm run sync-site",
+    "deploy": "wrangler deploy",
+    "pretest": "npm run sync-site",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "db:local": "wrangler d1 migrations apply airsoft-db --local",
+    "db:remote": "wrangler d1 migrations apply airsoft-db --remote"
+  },
+  "dependencies": {
+    "hono": "^4.6.14"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.18.8",
+    "@cloudflare/workers-types": "^5.20260722.1",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.0",
+    "wrangler": "^4.20.0"
+  }
+}

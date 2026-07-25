@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Booking confirmed — Coyote Ridge Airsoft</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <nav class="topbar">
+    <a class="brand" href="/">Coyote <span>Ridge</span> Airsoft</a>
+    <a class="small muted" href="/register">Book another</a>
+  </nav>
+
+  <main class="wrap narrow">
+    <h1 id="heading">Confirming your booking…</h1>
+    <p id="status" class="muted">Checking with the payment processor.</p>
+    <div id="error" class="notice error hidden" role="alert"></div>
+
+    <div id="details" class="hidden">
+      <div class="panel">
+        <div class="muted small">Booking reference</div>
+        <p class="total mono" id="ref"></p>
+        <div id="summary" class="muted"></div>
+      </div>
+
+      <h2>Waivers</h2>
+      <p class="muted small">Every player signs their own. Send each person their link —
+        nobody gets on the field without a signed waiver.</p>
+      <div id="attendees" class="stack"></div>
+
+      <h2>On the day</h2>
+      <ul class="muted small">
+        <li>Arrive 60 minutes before the first game for chrono and the safety brief.</li>
+        <li>Bring full-seal ANSI Z87.1+ eye protection. Under-18s need full face protection.</li>
+        <li>Every replica is chronographed and marked by staff before entering the field.</li>
+      </ul>
+    </div>
+  </main>
+
+  <script src="/success.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "coyote-ridge-airsoft",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-15",
+
+  // Static files live in public/. The marketing page is copied there by
+  // scripts/sync-site.mjs -- the source HTML at the repo root is never edited.
+  // The Worker handles "/" itself so it can inject the site hook via
+  // HTMLRewriter; every other asset path is served directly by Workers Assets.
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/"]
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "airsoft-db",
+      // Replace with the id printed by `wrangler d1 create airsoft-db`.
+      "database_id": "PLACEHOLDER_RUN_WRANGLER_D1_CREATE",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // Releases spots held by Checkout sessions that were never completed.
+  "triggers": {
+    "crons": ["*/10 * * * *"]
+  },
+
+  "vars": {
+    "PUBLIC_BASE_URL": "http://localhost:8787",
+    "WAIVER_VALID_DAYS": "365",
+    "HOLD_MINUTES": "30"
+  },
+
+  "observability": {
+    "enabled": true
+  }
+}

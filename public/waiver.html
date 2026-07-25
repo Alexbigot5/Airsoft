@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sign your waiver — Coyote Ridge Airsoft</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <nav class="topbar">
+    <a class="brand" href="/">Coyote <span>Ridge</span> Airsoft</a>
+  </nav>
+
+  <main class="wrap narrow">
+    <h1>Sign your waiver</h1>
+    <p id="intro" class="muted">Loading…</p>
+
+    <div id="error" class="notice error hidden" role="alert"></div>
+    <div id="done" class="notice ok hidden"></div>
+
+    <form id="form" class="hidden" novalidate>
+      <div id="waiverBody" class="waiver-body" tabindex="0" aria-label="Waiver text"></div>
+      <p class="muted small" id="versionLine"></p>
+
+      <h2>Who is playing</h2>
+      <label for="signerName">Player's full legal name</label>
+      <input class="input" id="signerName" autocomplete="name" required>
+
+      <label for="dateOfBirth">Player's date of birth</label>
+      <input class="input" id="dateOfBirth" type="date" required>
+      <p class="muted small" id="ageHint"></p>
+
+      <label for="email">Player's email</label>
+      <input class="input" id="email" type="email" autocomplete="email" required>
+
+      <div id="guardianBlock" class="panel hidden">
+        <h3>Parent or legal guardian</h3>
+        <p class="muted small">Players under 18 must be signed in by a parent or legal
+          guardian, who must also be on site for the whole game day.</p>
+
+        <label for="guardianName">Guardian's full legal name</label>
+        <input class="input" id="guardianName">
+
+        <label for="guardianRelationship">Relationship to the player</label>
+        <input class="input" id="guardianRelationship" placeholder="Parent, legal guardian…">
+
+        <label for="guardianEmail">Guardian's email</label>
+        <input class="input" id="guardianEmail" type="email">
+
+        <label for="guardianPhone">Guardian's phone</label>
+        <input class="input" id="guardianPhone" type="tel">
+      </div>
+
+      <h2>Emergency contact</h2>
+      <label for="emergencyName">Name</label>
+      <input class="input" id="emergencyName" required>
+      <label for="emergencyPhone">Phone</label>
+      <input class="input" id="emergencyPhone" type="tel" required>
+
+      <h2>Signature</h2>
+      <div class="check">
+        <input type="checkbox" id="agreed">
+        <label for="agreed">I have read the whole agreement above. I understand I am
+          giving up substantial legal rights, including the right to sue, and that
+          typing the name below is my electronic signature.</label>
+      </div>
+
+      <label for="signature">Type the signing name exactly as entered above</label>
+      <input class="input mono" id="signature" autocomplete="off">
+      <p class="muted small" id="signatureHint">For a player under 18, type the guardian's name.</p>
+
+      <p></p>
+      <button class="btn btn-block" id="submit" type="submit">Sign waiver</button>
+    </form>
+  </main>
+
+  <script src="/waiver.js" defer></script>
+</body>
+</html>

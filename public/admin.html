@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Staff — Coyote Ridge Airsoft</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <nav class="topbar">
+    <a class="brand" href="/">Coyote <span>Ridge</span> Airsoft — Staff</a>
+    <button class="btn small ghost hidden" id="signOut" type="button">Sign out</button>
+  </nav>
+
+  <main class="wrap">
+    <div id="error" class="notice error hidden" role="alert"></div>
+
+    <section id="auth">
+      <h1>Staff sign in</h1>
+      <p class="muted">Enter the staff token for this field.</p>
+      <form id="authForm" class="panel" novalidate>
+        <label for="token">Staff token</label>
+        <input class="input mono" id="token" type="password" autocomplete="current-password">
+        <p></p>
+        <button class="btn" type="submit">Sign in</button>
+      </form>
+    </section>
+
+    <section id="app" class="hidden">
+      <h1>Game days</h1>
+      <label for="eventPicker">Game day</label>
+      <select id="eventPicker"></select>
+
+      <div class="panel" id="eventSummary"></div>
+
+      <h2>Roster</h2>
+      <p class="muted small">Check-in is refused for anyone without a current signed
+        waiver — that is deliberate, not a bug. Tick chrono once their replica has
+        passed inspection.</p>
+      <div class="table-scroll">
+        <table id="roster">
+          <thead>
+            <tr>
+              <th>Player</th><th>Booking</th><th>Paid</th><th>Waiver</th>
+              <th>Chrono</th><th>Checked in</th><th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <h2>Maintenance</h2>
+      <button class="btn ghost small" id="sweep" type="button">Release expired holds now</button>
+      <span class="muted small" id="sweepResult"></span>
+    </section>
+  </main>
+
+  <script src="/admin.js" defer></script>
+</body>
+</html>

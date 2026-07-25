@@ -1,0 +1,10 @@
+# Copy to .dev.vars for local development (.dev.vars is gitignored).
+#
+# Staff token for /admin and /api/admin/*. Any non-empty string works locally.
+ADMIN_TOKEN="dev-admin-token"
+
+# Leave STRIPE_SECRET_KEY empty/unset to run the offline checkout stub, which
+# skips Stripe entirely and lets you walk the full booking -> paid flow locally.
+# Set both to real test-mode values to rehearse against Stripe.
+STRIPE_SECRET_KEY=""
+STRIPE_WEBHOOK_SECRET=""

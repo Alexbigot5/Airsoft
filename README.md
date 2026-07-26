@@ -4,9 +4,10 @@ Marketing site plus a Cloudflare Workers + D1 backend for player registration,
 waivers and payments.
 
 The site itself (`public/index.html`) is a bundled export and is treated
-as **read-only** — the Worker serves it and injects one script that points its
-"Book" buttons at the real flow. Everything under `src/`, `public/` and
-`migrations/` is the part you maintain.
+as **read-only** — the Worker serves it and injects two scripts and a stylesheet
+that point its "Book" buttons at the real flow and add the things the export does
+not have (map, Instagram link, waiver call-to-action, a mobile menu). Everything
+under `src/`, `public/` and `migrations/` is the part you maintain.
 
 ## What it does
 
@@ -14,7 +15,9 @@ as **read-only** — the Worker serves it and injects one script that points its
   Spots are held immediately so two people cannot buy the same last spot.
 - **Waivers** — one per attendee, not one per booking. Typed e-signature, stored
   with the exact waiver text hash, date of birth, guardian details for minors,
-  emergency contact, timestamp, IP and user agent. Valid for one year.
+  emergency contact, timestamp, IP and user agent. Valid for one year. Reachable
+  two ways: the seat-specific link that comes with a booking, and a standalone
+  `/waiver` page linked from the Games screen for signing ahead of time.
 - **Payments** — Stripe Checkout. The Worker creates the session; a signed,
   idempotent webhook is what actually marks a booking paid.
 - **Staff console** — `/admin`, gated by a shared token. Day-of roster, mark
@@ -36,6 +39,7 @@ src/
 public/
   index.html                the marketing page (read-only, never edited)
   site-hook.js              injected into it to redirect the mock "Book" buttons
+  site-enhance.js/.css      injected too: map, Instagram, waiver CTA, mobile nav
   register / waiver / success / admin pages, app.css
 test/api.spec.ts            the rules that cost money or create liability
 ```
@@ -67,6 +71,9 @@ exercises the production path rather than a shortcut around it.
 5. `/admin` — sign in with the token from `.dev.vars` (`dev-admin-token`), pick
    the game day, check both players in. Try checking in an unsigned attendee:
    it is refused, by design.
+6. `/waiver` with no token — the standalone waiver, linked from the Games page.
+   Sign it with an email that has no booking, then book with that same email and
+   check in: the signature is found by email and entry is allowed.
 
 Inspect state directly at any point:
 
@@ -155,6 +162,7 @@ Public:
 | POST | `/api/bookings/:ref/checkout` | returns a Checkout URL |
 | GET | `/api/waiver/current` | active waiver text and its hash |
 | GET/POST | `/api/waiver/attendee/:token` | read and sign one attendee's waiver |
+| POST | `/api/waiver/sign` | sign the standalone waiver, no booking needed |
 | POST | `/api/stripe/webhook` | signature-verified, idempotent |
 
 Staff — all require `Authorization: Bearer $ADMIN_TOKEN`:
@@ -210,6 +218,26 @@ up on the roster for staff to resolve.
   was actually signed.
 - **Waivers are append-only.** There is no update or delete path. A correction
   is a new signature.
+- **The standalone waiver is matched by email.** `/waiver` with no token has no
+  seat to attach to, so it files the signature against the player — the same
+  email-as-identity bookings already use — and links it to any seat booked under
+  that address. A seat booked *after* the signature is resolved the same way at
+  check-in. Two consequences worth knowing: age is judged as of the day it is
+  signed rather than a game day, so someone who turns 12 next month signs next
+  month; and re-submitting the identical name and date of birth returns the
+  existing signature instead of stacking up rows, while a *different* name or
+  date of birth is treated as a correction and does get its own row.
+- **The map needs no API key.** The Contact page embeds
+  `google.com/maps?q=…&output=embed`, which works without a billing-enabled
+  Google Cloud project. If the field's pin ever needs to be exact rather than
+  geocoded from the street address, swap `MAP_EMBED_URL` in
+  `public/site-enhance.js` for a coordinate query or a Maps Embed API URL.
+- **The bundle had no mobile navigation at all.** Its own stylesheet hides the
+  nav links below 900px without shipping a replacement, so Games, About and
+  Contact were unreachable on a phone. `site-enhance.js` adds the menu, and
+  `site-enhance.css` collapses the two-column layouts the export left fixed —
+  matched by inline-style attribute, in both the unspaced form the bundle authors
+  and the spaced form React re-serializes them to.
 - **No email is sent yet.** Waiver links are shown to the booker on `/success`.
   Adding Resend or MailChannels later is a small, isolated change.
 - **Refunds** are initiated in the Stripe dashboard; the `charge.refunded`

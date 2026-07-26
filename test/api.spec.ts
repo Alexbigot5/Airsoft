@@ -224,6 +224,139 @@ describe('waivers', () => {
   });
 });
 
+describe('standalone waiver', () => {
+  const sign = async (overrides: Record<string, unknown>, sha?: string) =>
+    SELF.fetch('https://x/api/waiver/sign', {
+      method: 'POST',
+      headers: JSON_HEADERS,
+      body: signBody(overrides, sha ?? (await currentSha())),
+    });
+
+  it('refuses a signature made against stale waiver text', async () => {
+    const res = await sign({ email: `solo${crypto.randomUUID().slice(0, 8)}@example.com` }, 'nope');
+
+    expect(res.status).toBe(409);
+    expect(((await res.json()) as any).error.code).toBe('waiver_version_stale');
+  });
+
+  it('refuses to let a minor sign for themselves', async () => {
+    const res = await sign({
+      signerName: 'Young Player',
+      email: `young${crypto.randomUUID().slice(0, 8)}@example.com`,
+      dateOfBirth: future(-14 * 365).slice(0, 10),
+    });
+
+    expect(res.status).toBe(422);
+    expect(((await res.json()) as any).error.code).toBe('guardian_required');
+  });
+
+  it('turns away anyone below the minimum age entirely', async () => {
+    const res = await sign({
+      signerName: 'Far Too Young',
+      email: `tiny${crypto.randomUUID().slice(0, 8)}@example.com`,
+      dateOfBirth: future(-6 * 365).slice(0, 10),
+      guardian: {
+        name: 'Parent Person',
+        email: 'parent@example.com',
+        phone: '555-0100',
+        relationship: 'Parent',
+      },
+    });
+
+    expect(res.status).toBe(422);
+    expect(((await res.json()) as any).error.code).toBe('too_young');
+  });
+
+  it('files the signature against the player and returns it again on a resubmit', async () => {
+    const email = `repeat${crypto.randomUUID().slice(0, 8)}@example.com`;
+    const sha = await currentSha();
+
+    const first = await sign({ signerName: 'Repeat Player', email }, sha);
+    expect(first.status).toBe(201);
+    const created = (await first.json()) as any;
+    expect(created.alreadySigned).toBe(false);
+
+    const second = await sign({ signerName: 'Repeat Player', email }, sha);
+    expect(second.status).toBe(200);
+    const again = (await second.json()) as any;
+    expect(again.alreadySigned).toBe(true);
+    expect(again.waiverId).toBe(created.waiverId);
+
+    const rows = await env.DB.prepare(
+      `SELECT COUNT(*) AS n FROM waivers w
+         JOIN players p ON p.id = w.player_id
+        WHERE w.signer_email = ?1 AND p.email = ?1`,
+    )
+      .bind(email)
+      .first<{ n: number }>();
+    expect(rows?.n).toBe(1);
+  });
+
+  it('attaches to a seat already booked under the same email', async () => {
+    const event = await makeEvent(5);
+    const email = `booked${crypto.randomUUID().slice(0, 8)}@example.com`;
+    const { body } = await book(event.slug, 1, { email });
+
+    const res = await sign({ signerName: 'Booked Player', email });
+    expect(res.status).toBe(201);
+    expect(((await res.json()) as any).linkedAttendees).toBe(1);
+
+    const attendee = await env.DB.prepare(
+      `SELECT id, waiver_id FROM booking_attendees WHERE attendee_token = ?1`,
+    )
+      .bind(body.attendees[0].token)
+      .first<{ id: number; waiver_id: number | null }>();
+    expect(attendee?.waiver_id).not.toBeNull();
+
+    const checkIn = await SELF.fetch(`https://x/api/admin/attendees/${attendee!.id}/check-in`, {
+      method: 'POST',
+      headers: { ...ADMIN, ...JSON_HEADERS },
+      body: JSON.stringify({ chronoOk: true }),
+    });
+    expect(checkIn.status).toBe(200);
+  });
+
+  it('lets check-in find a waiver signed before the booking existed', async () => {
+    const email = `ahead${crypto.randomUUID().slice(0, 8)}@example.com`;
+
+    // Signed first, with nothing to attach to.
+    const res = await sign({ signerName: 'Early Bird', email });
+    expect(res.status).toBe(201);
+    expect(((await res.json()) as any).linkedAttendees).toBe(0);
+
+    // Books afterwards, so the seat is created with no waiver on it.
+    const event = await makeEvent(5);
+    const { body } = await book(event.slug, 1, { email });
+    const attendee = await env.DB.prepare(
+      `SELECT id, waiver_id FROM booking_attendees WHERE attendee_token = ?1`,
+    )
+      .bind(body.attendees[0].token)
+      .first<{ id: number; waiver_id: number | null }>();
+    expect(attendee?.waiver_id).toBeNull();
+
+    const checkIn = await SELF.fetch(`https://x/api/admin/attendees/${attendee!.id}/check-in`, {
+      method: 'POST',
+      headers: { ...ADMIN, ...JSON_HEADERS },
+      body: JSON.stringify({ chronoOk: true }),
+    });
+    expect(checkIn.status).toBe(200);
+  });
+
+  it('will not let a blacklisted player put a waiver on file', async () => {
+    const email = `banned${crypto.randomUUID().slice(0, 8)}@example.com`;
+    await env.DB.prepare(
+      `INSERT INTO players (email, full_name, blacklisted) VALUES (?1, 'Banned Player', 1)`,
+    )
+      .bind(email)
+      .run();
+
+    const res = await sign({ signerName: 'Banned Player', email });
+
+    expect(res.status).toBe(403);
+    expect(((await res.json()) as any).error.code).toBe('player_blocked');
+  });
+});
+
 describe('check-in', () => {
   it('refuses anyone without a waiver on file', async () => {
     const event = await makeEvent(5);

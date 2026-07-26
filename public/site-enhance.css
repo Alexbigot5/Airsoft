@@ -1,0 +1,268 @@
+/* Styles for the pieces site-enhance.js adds to the bundled marketing page, plus
+   the responsive repairs that page never shipped.
+
+   Loaded into the bundle's own document, so the palette below is its palette
+   (:root defines --orange, --line and friends). Everything is namespaced .cr-*
+   except the media query at the bottom, which deliberately reaches into the
+   bundle's own classes -- see the comment there. */
+
+/* ---------------------------------------------------------------------------
+   Google Maps embed on the Contact page
+   --------------------------------------------------------------------------- */
+
+/* Sits under the bundle's .fc-scrim (z-index 2) and address caption (z-index 3),
+   so the gradient that made the address readable over a screenshot now does the
+   same job over a live map. */
+.cr-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  z-index: 1;
+  filter: grayscale(0.25) contrast(1.05);
+  /* Keeps the frame on-brand before the tiles arrive, and keeps the browser's
+     own "couldn't load" page dark rather than a white rectangle, for the
+     visitors behind a blocker or a filtering network. */
+  background: var(--panel);
+  color-scheme: dark;
+}
+
+/* On a phone an interactive map inside a scrolling page swallows the swipe that
+   was meant to scroll the page. Below 900px the iframe stops taking pointer
+   events and this overlay hands the tap to the real Maps app instead. */
+.cr-map-tap {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: none;
+}
+
+.cr-map-tap span {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  background: var(--orange);
+  color: #0b0c0e;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 7px 10px;
+}
+
+/* ---------------------------------------------------------------------------
+   Contact page: Instagram + directions
+   --------------------------------------------------------------------------- */
+
+.cr-social {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.cr-ig svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Games page: the waiver call to action
+   --------------------------------------------------------------------------- */
+
+.cr-waiver-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: 34px;
+  padding: 28px 30px;
+  background: var(--panel);
+  border: 1px solid var(--orange);
+}
+
+.cr-waiver-cta h3 {
+  font-size: 23px;
+  font-weight: 600;
+  margin: 8px 0 8px;
+}
+
+.cr-waiver-cta p {
+  color: var(--mut);
+  margin: 0;
+  max-width: 560px;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.cr-waiver-cta .btn {
+  text-decoration: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Mobile navigation
+   --------------------------------------------------------------------------- */
+
+/* The bundle hides .navlinks below 900px and ships nothing in its place, which
+   left the phone layout with no way to reach Games, About or Contact at all.
+   This is that way. */
+.cr-menu-btn {
+  display: none;
+  width: 46px;
+  height: 46px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-left: 12px;
+  background: transparent;
+  border: 1px solid var(--line);
+  cursor: pointer;
+  flex: none;
+}
+
+.cr-menu-btn span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--bone);
+}
+
+.cr-menu-btn[aria-expanded='true'] {
+  border-color: var(--orange);
+}
+
+.cr-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(11, 12, 14, 0.72);
+}
+
+.cr-menu {
+  position: fixed;
+  z-index: 91;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(320px, 84vw);
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  padding: 22px 18px calc(22px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cr-menu-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.cr-menu-close {
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--bone);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cr-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--mut);
+  font-family: 'Oswald', sans-serif;
+  font-weight: 500;
+  font-size: 17px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 16px 4px;
+  cursor: pointer;
+}
+
+.cr-menu-item.on,
+.cr-menu-item:hover {
+  color: var(--bone);
+}
+
+.cr-menu-item.on {
+  border-bottom-color: var(--orange);
+}
+
+.cr-menu-item.cr-menu-cta {
+  color: var(--orange);
+}
+
+/* ---------------------------------------------------------------------------
+   Responsive repairs to the bundle's own layout
+   ---------------------------------------------------------------------------
+
+   The bundle's only breakpoint collapses .grid3/.grid2/.statstrip/.fgrid and
+   hides the nav links. Everything below is a two-column layout it forgot: the
+   booking grid, and the Contact and About pages, which are laid out with inline
+   styles and so are matched here by attribute rather than by class. */
+
+@media (max-width: 900px) {
+  .cr-menu-btn { display: flex; }
+  .cr-map { pointer-events: none; }
+  .cr-map-tap { display: block; }
+
+  .wrap { padding: 0 20px; }
+  .sec { padding: 56px 0; }
+
+  .navrow > .btn { padding: 10px 14px; font-size: 13px; }
+
+  /* Both spellings on purpose: the bundle authors these as unspaced inline
+     styles, and React re-serializes them with a space after the colon when it
+     renders. Matching only one form silently matches nothing. */
+  .bookgrid { grid-template-columns: 1fr !important; }
+  .sec .wrap > div[style*="grid-template-columns:1fr 1fr"],
+  .sec .wrap > div[style*="grid-template-columns: 1fr 1fr"],
+  .sec .wrap > div[style*="grid-template-columns:1.2fr 1fr"],
+  .sec .wrap > div[style*="grid-template-columns: 1.2fr 1fr"] {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+  }
+
+  .summary { position: static !important; }
+  .statcell { border-right: 0; border-bottom: 1px solid var(--line); }
+  .statcell:last-child { border-bottom: 0; }
+
+  /* Four filter tabs do not fit on a phone; let the row scroll instead of
+     pushing the whole page sideways. */
+  .tabs { width: 100% !important; overflow-x: auto; }
+  .tab { white-space: nowrap; }
+
+  .gallgrid { grid-template-columns: 1fr 1fr !important; grid-auto-rows: 150px !important; }
+  .ctaband { padding: 36px 22px !important; }
+  .conf { padding: 32px 22px !important; }
+  .hero { min-height: 0; }
+  .hero-inner { padding: 84px 0 48px; }
+  .cr-waiver-cta { padding: 24px 20px; }
+  .cr-waiver-cta .btn { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 560px) {
+  /* Phone / email / game-days cells under the map, two-up by default. */
+  .mapph + div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 420px) {
+  /* Brand + Reserve + menu button stop fitting on one row. The menu carries a
+     "Reserve a spot" item, so the header button is the one to drop. */
+  .navrow > .btn { display: none; }
+}

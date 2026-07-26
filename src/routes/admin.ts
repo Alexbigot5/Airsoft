@@ -379,6 +379,41 @@ admin.post('/bookings/:ref/cancel', async (c) => {
 // Check-in
 // ---------------------------------------------------------------------------
 
+/**
+ * Finds a current signature belonging to this seat's player -- matched on the
+ * player row, or failing that on the email the seat was booked under -- and
+ * attaches it. Returns its expiry, or null if there is nothing to attach.
+ *
+ * Only ever fills a seat that has no waiver: an expired signature stays visible
+ * as expired rather than being quietly swapped for a newer one.
+ */
+async function attachExistingWaiver(db: D1Database, attendeeId: number): Promise<string | null> {
+  const candidate = await db
+    .prepare(
+      `SELECT w.id, w.expires_at
+         FROM booking_attendees a
+         JOIN waivers w
+           ON (w.player_id IS NOT NULL AND w.player_id = a.player_id)
+           OR (a.email IS NOT NULL AND lower(w.signer_email) = lower(a.email))
+        WHERE a.id = ?1
+          AND a.waiver_id IS NULL
+          AND w.expires_at > ?2
+        ORDER BY w.expires_at DESC
+        LIMIT 1`,
+    )
+    .bind(attendeeId, nowIso())
+    .first<{ id: number; expires_at: string }>();
+
+  if (!candidate) return null;
+
+  await db
+    .prepare(`UPDATE booking_attendees SET waiver_id = ?1 WHERE id = ?2 AND waiver_id IS NULL`)
+    .bind(candidate.id, attendeeId)
+    .run();
+
+  return candidate.expires_at;
+}
+
 admin.post('/attendees/:id/check-in', async (c) => {
   const attendeeId = Number(c.req.param('id'));
   const body = await c.req.json().catch(() => ({}));
@@ -404,6 +439,14 @@ admin.post('/attendees/:id/check-in', async (c) => {
 
   if (row.booking_status === 'cancelled' || row.booking_status === 'expired') {
     throw new ApiError(409, 'booking_inactive', 'That booking is cancelled or expired.');
+  }
+
+  // This seat may have no waiver attached only because the player signed the
+  // standalone waiver before the booking existed. That is a signature on file,
+  // so look for it by identity before turning them away -- and attach it, so
+  // the roster stops showing them as unsigned.
+  if (!row.waiver_expires_at) {
+    row.waiver_expires_at = await attachExistingWaiver(c.env.DB, attendeeId);
   }
 
   // The rule this whole system exists to enforce: nobody steps on the field

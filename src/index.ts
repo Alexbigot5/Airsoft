@@ -39,19 +39,35 @@ app.get('/index.html', (c) => c.redirect('/', 301));
 
 /**
  * The marketing page is a 3 MB bundled export that we treat as read-only: it
- * lives at public/index.html and is served here with a single <script>
- * appended, which is what redirects its mock "Book" buttons at the real
- * registration flow. Streaming through HTMLRewriter avoids ever holding the
- * whole document in memory.
+ * lives at public/index.html and is served here with a couple of tags appended,
+ * which are what redirect its mock "Book" buttons at the real registration flow
+ * and add the map, the Instagram link, the waiver call-to-action and a mobile
+ * menu. Streaming through HTMLRewriter avoids ever holding the whole document
+ * in memory.
+ *
+ * The stylesheet is appended here as well as by site-enhance.js: the bundle
+ * replaces the entire document once it unpacks, so this copy only styles the
+ * loading splash, and the script puts it back afterwards.
  */
 app.get('/', async (c) => {
   const asset = await c.env.ASSETS.fetch(new Request(new URL('/index.html', c.req.url)));
   if (!asset.ok) return asset;
 
   return new HTMLRewriter()
+    .on('head', {
+      element(el) {
+        el.append('<link rel="stylesheet" href="/site-enhance.css" id="cr-enhance-css">', {
+          html: true,
+        });
+      },
+    })
     .on('body', {
       element(el) {
-        el.append('<script src="/site-hook.js" defer></script>', { html: true });
+        el.append(
+          '<script src="/site-hook.js" defer></script>' +
+            '<script src="/site-enhance.js" defer></script>',
+          { html: true },
+        );
       },
     })
     .transform(

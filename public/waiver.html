@@ -3,16 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Sign your waiver — Coyote Ridge Airsoft</title>
+  <title>Liability waiver — Coyote Ridge Airsoft</title>
   <link rel="stylesheet" href="/app.css">
 </head>
 <body>
   <nav class="topbar">
     <a class="brand" href="/">Coyote <span>Ridge</span> Airsoft</a>
+    <a class="btn ghost small" href="/register">Book a game</a>
   </nav>
 
   <main class="wrap narrow">
-    <h1>Sign your waiver</h1>
+    <h1 id="heading">Liability waiver</h1>
     <p id="intro" class="muted">Loading…</p>
 
     <div id="error" class="notice error hidden" role="alert"></div>
@@ -72,6 +73,9 @@
       <p></p>
       <button class="btn btn-block" id="submit" type="submit">Sign waiver</button>
     </form>
+
+    <p class="muted small" id="footnote">One waiver per player. Everyone who steps on the
+      field signs their own, including players in the same party.</p>
   </main>
 
   <script src="/waiver.js" defer></script>

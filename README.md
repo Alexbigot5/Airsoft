@@ -238,6 +238,10 @@ up on the roster for staff to resolve.
   This list is separate from the `events` table in D1, which is what `/register`
   and the staff console run on; if sign-up ever moves back in-house, the Games
   page should read `/api/events` instead of this array.
+- **Two FAQ entries are gone** from the About page — the age question and the
+  group-booking one. `HIDDEN_FAQ_QUESTIONS` in `public/site-enhance.js` matches
+  them on the question text, so rewording a question in the bundle brings its
+  entry back.
 - **The Book page is gone**, along with its mock booking form. Buttons that name
   no particular game day ("Reserve a spot", the nav's "Reserve →") now go to the
   Games page, since sign-up is per event and there is nowhere else for a generic

@@ -93,6 +93,14 @@
   /** Removed from the site: its booking form was a mock. */
   var HIDDEN_NAV_LABELS = ['book'];
 
+  /**
+   * FAQ entries taken off the About page, matched on the question as the export
+   * wrote it. Normalised the same way as everything else here, so case and
+   * spacing do not matter -- but the wording does: change the question in the
+   * bundle and the entry comes back.
+   */
+  var HIDDEN_FAQ_QUESTIONS = ['how old do i have to be?', 'can i book for a group or party?'];
+
   var mapsQuery = encodeURIComponent('Coyote Ridge Airsoft, ' + FIELD_ADDRESS);
   // Keyless embed. The official Maps Embed API needs a billing-enabled key;
   // this form needs nothing, which is what makes it deployable as it stands.
@@ -336,11 +344,23 @@
   }
 
   // -------------------------------------------------------------------------
-  // The Book page, removed
+  // Taken off the site: the Book page, and two FAQ entries
   // -------------------------------------------------------------------------
 
   function isHiddenNavLabel(label) {
     return HIDDEN_NAV_LABELS.indexOf(normalise(label)) !== -1;
+  }
+
+  /**
+   * Adds or removes a class only when it would actually change, because these
+   * elements are inside the tree the MutationObserver watches: a class written
+   * unconditionally on every pass would wake the observer, which would schedule
+   * another pass, forever.
+   */
+  function setClass(node, name, wanted) {
+    if (node.classList.contains(name) === wanted) return;
+    if (wanted) node.classList.add(name);
+    else node.classList.remove(name);
   }
 
   /* Hidden rather than deleted: these are React's own nodes, and it puts back
@@ -348,7 +368,26 @@
   function hideRemovedNav() {
     var links = document.querySelectorAll('.navlinks .nav-link, .footlink');
     for (var i = 0; i < links.length; i++) {
-      if (isHiddenNavLabel(links[i].textContent)) links[i].classList.add('cr-hidden');
+      if (isHiddenNavLabel(links[i].textContent)) setClass(links[i], 'cr-hidden', true);
+    }
+  }
+
+  function hideRemovedFaqs() {
+    var items = document.querySelectorAll('.faqitem');
+    var firstVisible = null;
+
+    for (var i = 0; i < items.length; i++) {
+      var question = items[i].querySelector('h3');
+      var hide =
+        !!question && HIDDEN_FAQ_QUESTIONS.indexOf(normalise(question.textContent)) !== -1;
+
+      setClass(items[i], 'cr-hidden', hide);
+      if (!hide && !firstVisible) firstVisible = items[i];
+    }
+
+    // The stack's top border belongs to :first-child, which may now be hidden.
+    for (var j = 0; j < items.length; j++) {
+      setClass(items[j], 'cr-faq-top', items[j] === firstVisible);
     }
   }
 
@@ -497,6 +536,7 @@
     try {
       ensureStyles();
       hideRemovedNav();
+      hideRemovedFaqs();
       enhanceNav();
       enhanceContact();
       enhanceSchedules();

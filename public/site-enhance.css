@@ -108,6 +108,10 @@
 
 .cr-hidden { display: none !important; }
 
+/* The FAQ stack draws its top border on :first-child, which is hidden when the
+   first entry is one of the removed ones. */
+.faqitem.cr-faq-top { border-top: 1px solid var(--line); }
+
 /* The export's sample game days. Hidden rather than removed: React owns these
    nodes and puts back anything deleted from under it, and leaving them in the
    document is what lets site-enhance.js find the container to render into. */

@@ -79,11 +79,14 @@ export const waiverValidDays = (env: Env) => Number(env.WAIVER_VALID_DAYS ?? '36
 
 /**
  * Base URL used to build links that leave the app (Stripe redirects, waiver
- * links). Falls back to the incoming request's origin so local dev and preview
- * deployments work without reconfiguring PUBLIC_BASE_URL.
+ * links).
+ *
+ * Defaults to the origin of the incoming request, which is right for local dev,
+ * workers.dev and preview deployments alike. PUBLIC_BASE_URL only needs setting
+ * when the canonical origin differs from the one being served -- a config left
+ * pointing at localhost is a worse failure than having no config at all.
  */
 export function baseUrl(env: Env, req: Request): string {
   const configured = env.PUBLIC_BASE_URL?.trim();
-  if (configured && !configured.startsWith('http://localhost')) return configured.replace(/\/$/, '');
-  return new URL(req.url).origin;
+  return configured ? configured.replace(/\/$/, '') : new URL(req.url).origin;
 }

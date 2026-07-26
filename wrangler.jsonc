@@ -1,17 +1,18 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "coyote-ridge-airsoft",
+  // Must match the Workers Builds project name, otherwise CI overrides it on
+  // every build and opens pull requests about the mismatch.
+  "name": "airsoft",
   "main": "src/index.ts",
   "compatibility_date": "2025-01-15",
 
-  // Static files live in public/. The marketing page is copied there by
-  // scripts/sync-site.mjs -- the source HTML at the repo root is never edited.
+  // Static files, including the bundled marketing page at public/index.html.
   // The Worker handles "/" itself so it can inject the site hook via
   // HTMLRewriter; every other asset path is served directly by Workers Assets.
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
-    "run_worker_first": ["/"]
+    "run_worker_first": ["/", "/index.html"]
   },
 
   "d1_databases": [
@@ -29,7 +30,12 @@
   },
 
   "vars": {
-    "PUBLIC_BASE_URL": "http://localhost:8787",
+    // Origin used to build links that leave the app (Stripe redirects, waiver
+    // links). Leave empty to use the origin of the incoming request, which is
+    // correct for both `wrangler dev` and workers.dev. Set it only when the
+    // canonical origin differs from the one being served, e.g. behind a custom
+    // domain you want every link to use.
+    "PUBLIC_BASE_URL": "",
     "WAIVER_VALID_DAYS": "365",
     "HOLD_MINUTES": "30"
   },

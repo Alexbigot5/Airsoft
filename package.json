@@ -4,12 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "sync-site": "node scripts/sync-site.mjs",
-    "predev": "npm run sync-site",
     "dev": "wrangler dev",
-    "predeploy": "npm run sync-site",
     "deploy": "wrangler deploy",
-    "pretest": "npm run sync-site",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "db:local": "wrangler d1 migrations apply airsoft-db --local",

@@ -103,6 +103,71 @@
 }
 
 /* ---------------------------------------------------------------------------
+   The schedule
+   --------------------------------------------------------------------------- */
+
+.cr-hidden { display: none !important; }
+
+/* The export's sample game days. Hidden rather than removed: React owns these
+   nodes and puts back anything deleted from under it, and leaving them in the
+   document is what lets site-enhance.js find the container to render into. */
+.gamerow { display: none !important; }
+
+/* Deliberately mirrors .gamerow, minus the spots column. */
+.cr-event {
+  display: grid;
+  grid-template-columns: 120px 1fr auto auto;
+  gap: 24px;
+  align-items: center;
+  padding: 22px 26px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  transition: background 0.15s;
+}
+
+/* Not :first-of-type -- the hidden sample rows are still divs in the same
+   container, so they would win it. */
+.cr-event + .cr-event { border-top: 0; }
+.cr-event:hover { background: var(--panel2); }
+
+.cr-chips { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+
+.cr-event-title {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.cr-event-note {
+  color: var(--mut);
+  font-size: 14px;
+  margin: 0;
+  max-width: 460px;
+}
+
+.cr-price {
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+  text-align: right;
+}
+
+.cr-book { text-decoration: none; }
+
+.cr-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.cr-disclaimer {
+  color: var(--mut);
+  font-size: 13px;
+  margin: 18px 0 0;
+}
+
+/* ---------------------------------------------------------------------------
    Mobile navigation
    --------------------------------------------------------------------------- */
 
@@ -254,6 +319,10 @@
   .hero-inner { padding: 84px 0 48px; }
   .cr-waiver-cta { padding: 24px 20px; }
   .cr-waiver-cta .btn { width: 100%; justify-content: center; }
+
+  .cr-event { grid-template-columns: 1fr; gap: 14px; padding: 20px; }
+  .cr-price { justify-items: start; text-align: left; grid-auto-flow: column; gap: 10px; }
+  .cr-book { justify-content: center; }
 }
 
 @media (max-width: 560px) {

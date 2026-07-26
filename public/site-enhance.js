@@ -5,7 +5,13 @@
  *   - a live Google Maps embed where the Contact page has a placeholder slot
  *   - an Instagram button and a directions link on the Contact page
  *   - the liability waiver call-to-action on the Games page
+ *   - the real game-day schedule, replacing the export's sample games
  *   - a working navigation menu on phones
+ *
+ * It also takes two things away: the Book page, whose booking form was a mock,
+ * and the per-game player counts, which were sample numbers with nothing behind
+ * them. Sign-up is per event, through the registration form linked from each
+ * game day in EVENTS below.
  *
  * Three properties of the host page shape all of this.
  *
@@ -34,6 +40,58 @@
   var INSTAGRAM_HANDLE = '@coyote__ridge';
   var FIELD_ADDRESS = '84562 Territorial Hwy, Eugene, OR';
   var WAIVER_URL = '/waiver';
+
+  /**
+   * The game days, and the only place to edit them. Each `url` is that day's
+   * registration form; a game day without one would have no way to sign up, so
+   * every entry needs it.
+   *
+   * No spots or capacity here on purpose. The export showed "6 / 40 spots left"
+   * from sample data with nothing behind it, which reads as live availability
+   * and is worse than showing nothing.
+   */
+  var EVENTS = [
+    {
+      mon: 'AUG',
+      dd: '15',
+      day: 'SAT',
+      title: 'Open Play',
+      time: '9:00 AM – 4:00 PM',
+      note: 'Objective-based games run by marshals all day. Chrono and med on site.',
+      url: 'https://form.jotform.com/261820920022041',
+    },
+    {
+      mon: 'AUG',
+      dd: '29',
+      day: 'SAT',
+      title: 'Open Play',
+      time: '9:00 AM – 4:00 PM',
+      note: 'Objective-based games run by marshals all day. Chrono and med on site.',
+      url: 'https://form.jotform.com/261835114941153',
+    },
+  ];
+
+  var PRICING = [
+    { label: 'Early bird', value: '$30' },
+    { label: 'Registration', value: '$35' },
+  ];
+
+  var FEATURES = [
+    'Anyone welcome',
+    'Safe & fair gameplay',
+    'Objective based games',
+    'Chrono & med on site',
+    'Bring your own gear',
+  ];
+
+  var SCHEDULE_INTRO =
+    'Two open play events, and everyone is welcome. Games run rain or shine — gates ' +
+    'open 60 minutes before first call for chrono and the safety brief.';
+
+  var SCHEDULE_DISCLAIMER = 'Dates subject to change due to weather or field conditions.';
+
+  /** Removed from the site: its booking form was a mock. */
+  var HIDDEN_NAV_LABELS = ['book'];
 
   var mapsQuery = encodeURIComponent('Coyote Ridge Airsoft, ' + FIELD_ADDRESS);
   // Keyless embed. The official Maps Embed API needs a billing-enabled key;
@@ -172,6 +230,129 @@
   }
 
   // -------------------------------------------------------------------------
+  // The schedule: real game days in place of the export's samples
+  // -------------------------------------------------------------------------
+
+  function eventRow(game) {
+    var row = el('div', 'cr-event');
+
+    var date = el('div', 'gdate');
+    date.appendChild(el('div', 'tag', game.mon));
+    date.appendChild(el('div', 'gday', game.dd));
+    date.appendChild(el('div', 'tag', game.day));
+    row.appendChild(date);
+
+    var body = el('div');
+    var chips = el('div', 'cr-chips');
+    chips.appendChild(el('span', 'chip chip-o', game.time));
+    chips.appendChild(el('span', 'chip', 'Everyone welcome'));
+    body.appendChild(chips);
+    body.appendChild(el('h3', 'cond cr-event-title', game.title));
+    body.appendChild(el('p', 'cr-event-note', game.note));
+    row.appendChild(body);
+
+    var price = el('div', 'cr-price');
+    for (var i = 0; i < PRICING.length; i++) {
+      price.appendChild(el('div', 'tag', PRICING[i].value + ' ' + PRICING[i].label));
+    }
+    row.appendChild(price);
+
+    var book = externalLink(game.url, 'btn cr-book');
+    book.textContent = 'Book →';
+    book.setAttribute('aria-label', 'Book ' + game.title + ' on ' + game.mon + ' ' + game.dd);
+    row.appendChild(book);
+
+    return row;
+  }
+
+  /**
+   * The nearest ancestor that is a plain element rather than one of the
+   * bundle's own tags.
+   *
+   * This matters more than it looks. Before the runtime reads the page, a
+   * `.gamerow`'s parent is the `<sc-for>` that repeats it -- appending there
+   * would put our rows *inside* the repeat, and they would come back rendered
+   * once per sample game. After the runtime has rendered, the same row's parent
+   * is the plain container. Skipping custom elements (the ones with a dash in
+   * the tag name) resolves to that same container either way, which is what
+   * makes the idempotency check below hold.
+   */
+  function plainParent(node) {
+    var parent = node.parentElement;
+    while (parent && (parent.tagName || '').indexOf('-') !== -1) parent = parent.parentElement;
+    return parent;
+  }
+
+  /**
+   * Both the home page's "This weekend" list and the Games page schedule are
+   * built from the same `.gamerow` markup, so both are found the same way: the
+   * bundle's rows are hidden by the stylesheet rather than removed -- they stay
+   * queryable, which is what makes their container findable on every re-render.
+   */
+  function enhanceSchedules() {
+    var rows = document.querySelectorAll('.gamerow');
+    var seen = [];
+
+    for (var i = 0; i < rows.length; i++) {
+      var container = plainParent(rows[i]);
+      if (!container || seen.indexOf(container) !== -1) continue;
+      seen.push(container);
+      if (container.querySelector('.cr-event')) continue;
+
+      for (var j = 0; j < EVENTS.length; j++) {
+        container.appendChild(eventRow(EVENTS[j]));
+      }
+    }
+  }
+
+  /** The filter tabs and "N games listed" count, which filtered sample data. */
+  function hideScheduleFilters() {
+    var tabs = document.querySelector('.tabs');
+    if (tabs && tabs.parentElement) tabs.parentElement.classList.add('cr-hidden');
+  }
+
+  function enhanceGamesPage() {
+    var heading = gamesHeading();
+    if (!heading) return; // not the Games page
+
+    var wrap = heading.closest ? heading.closest('.wrap') : heading.parentElement;
+    if (!wrap) return;
+
+    // "Spots update live as bookings come in" stopped being true when the
+    // player counts went.
+    var intro = wrap.querySelector('p');
+    if (intro && intro.textContent !== SCHEDULE_INTRO) intro.textContent = SCHEDULE_INTRO;
+
+    if (!wrap.querySelector('.cr-features')) {
+      var features = el('div', 'cr-features');
+      for (var i = 0; i < FEATURES.length; i++) {
+        features.appendChild(el('span', 'chip', FEATURES[i]));
+      }
+      wrap.appendChild(features);
+      wrap.appendChild(el('p', 'cr-disclaimer', SCHEDULE_DISCLAIMER));
+    }
+
+    hideScheduleFilters();
+  }
+
+  // -------------------------------------------------------------------------
+  // The Book page, removed
+  // -------------------------------------------------------------------------
+
+  function isHiddenNavLabel(label) {
+    return HIDDEN_NAV_LABELS.indexOf(normalise(label)) !== -1;
+  }
+
+  /* Hidden rather than deleted: these are React's own nodes, and it puts back
+     anything removed from under it on the next render. */
+  function hideRemovedNav() {
+    var links = document.querySelectorAll('.navlinks .nav-link, .footlink');
+    for (var i = 0; i < links.length; i++) {
+      if (isHiddenNavLabel(links[i].textContent)) links[i].classList.add('cr-hidden');
+    }
+  }
+
+  // -------------------------------------------------------------------------
   // Mobile navigation
   // -------------------------------------------------------------------------
 
@@ -230,16 +411,16 @@
     head.appendChild(close);
     panel.appendChild(head);
 
-    // Mirrors whatever the bundle currently has in its (hidden) nav bar.
+    // Mirrors whatever the bundle currently has in its (hidden) nav bar, minus
+    // the pages that have been taken off the site.
     var links = document.querySelectorAll('.navlinks .nav-link');
     for (var i = 0; i < links.length; i++) {
+      if (isHiddenNavLabel(links[i].textContent)) continue;
       panel.appendChild(
         menuItem(links[i].textContent, links[i].className.indexOf('on') !== -1),
       );
     }
 
-    // No "Reserve" item: the Book entry above is one of the labels site-hook.js
-    // intercepts, so it already lands on the real /register flow.
     panel.appendChild(menuLink('Sign liability waiver', WAIVER_URL, 'cr-menu-cta'));
     panel.appendChild(menuLink('Instagram ' + INSTAGRAM_HANDLE, INSTAGRAM_URL));
 
@@ -315,8 +496,11 @@
     queued = false;
     try {
       ensureStyles();
+      hideRemovedNav();
       enhanceNav();
       enhanceContact();
+      enhanceSchedules();
+      enhanceGamesPage();
       enhanceGames();
     } catch (err) {
       // A broken enhancement must not take the page down with it.

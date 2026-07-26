@@ -5,9 +5,10 @@ waivers and payments.
 
 The site itself (`public/index.html`) is a bundled export and is treated
 as **read-only** — the Worker serves it and injects two scripts and a stylesheet
-that point its "Book" buttons at the real flow and add the things the export does
-not have (map, Instagram link, waiver call-to-action, a mobile menu). Everything
-under `src/`, `public/` and `migrations/` is the part you maintain.
+that carry every change made to it since: the real game-day schedule, the map,
+the Instagram link, the waiver call-to-action, a mobile menu, and the removal of
+its mock Book page. Everything under `src/`, `public/` and `migrations/` is the
+part you maintain.
 
 ## What it does
 
@@ -39,7 +40,7 @@ src/
 public/
   index.html                the marketing page (read-only, never edited)
   site-hook.js              injected into it to redirect the mock "Book" buttons
-  site-enhance.js/.css      injected too: map, Instagram, waiver CTA, mobile nav
+  site-enhance.js/.css      injected too: schedule, map, Instagram, waiver, nav
   register / waiver / success / admin pages, app.css
 test/api.spec.ts            the rules that cost money or create liability
 ```
@@ -63,7 +64,8 @@ exercises the production path rather than a shortcut around it.
 
 ### Walk it end to end
 
-1. `/` — the marketing page. "Book" now goes to `/register`.
+1. `/` — the marketing page. Generic "Book"/"Reserve" buttons go to the Games
+   page; each game day there books through its own registration form.
 2. `/register` — book 2 spots. You land on the simulated checkout; pay.
 3. `/success?ref=…` — flips to paid, and lists a waiver link per attendee.
 4. Open each waiver link and sign. Use a date of birth under 18 to see the
@@ -227,6 +229,20 @@ up on the roster for staff to resolve.
   month; and re-submitting the identical name and date of birth returns the
   existing signature instead of stacking up rows, while a *different* name or
   date of birth is treated as a correction and does get its own row.
+- **The game days live in `public/site-enhance.js`.** `EVENTS` at the top of that
+  file is the one place to edit them: date, title, time, blurb, and the
+  registration form each one books through. They replace the sample games the
+  export shipped, on both the home page and the Games page. There are no spot
+  counts — the export showed "6 / 40 spots left" from sample data with nothing
+  behind it, which reads as live availability and is worse than showing nothing.
+  This list is separate from the `events` table in D1, which is what `/register`
+  and the staff console run on; if sign-up ever moves back in-house, the Games
+  page should read `/api/events` instead of this array.
+- **The Book page is gone**, along with its mock booking form. Buttons that name
+  no particular game day ("Reserve a spot", the nav's "Reserve →") now go to the
+  Games page, since sign-up is per event and there is nowhere else for a generic
+  button to lead. `/register` and the Stripe flow behind it are untouched and
+  still live at that URL.
 - **The map needs no API key.** The Contact page embeds
   `google.com/maps?q=…&output=embed`, which works without a billing-enabled
   Google Cloud project. If the field's pin ever needs to be exact rather than

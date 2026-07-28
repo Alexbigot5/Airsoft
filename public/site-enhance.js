@@ -8,6 +8,7 @@
  *   - the real game-day schedule, replacing the export's sample games
  *   - a photo gallery on the home page, in place of the invented game modes
  *   - a working navigation menu on phones
+ *   - copy with no em dashes in it, the bundle's own included
  *
  * It also corrects what the export made up: the field's phone number, address
  * and email, its "open Sat + Sun" status, and the footer's stand-in operator
@@ -172,11 +173,11 @@
   var GALLERY_EYEBROW = '01 / Field gallery';
   var GALLERY_HEADING = 'Shots from game day';
   var GALLERY_INTRO =
-    'Every photo here is from a Coyote Ridge game day — the terrain, the ' +
+    'Every photo here is from a Coyote Ridge game day: the terrain, the ' +
     'structures and the players who show up for them.';
 
   var SCHEDULE_INTRO =
-    'Two open play events, and everyone is welcome. Games run rain or shine — gates ' +
+    'Two open play events, and everyone is welcome. Games run rain or shine. Gates ' +
     'open 60 minutes before first call for chrono and the safety brief.';
 
   var SCHEDULE_DISCLAIMER = 'Dates subject to change due to weather or field conditions.';
@@ -200,6 +201,89 @@
    * column back.
    */
   var HIDDEN_FOOTER_LINKS = ['open play', 'private events', 'beginner sessions'];
+
+  var EM_DASH = '—';
+
+  /**
+   * Em dashes, taken out of the bundle's copy.
+   *
+   * Pairs of [the sentence as the export wrote it, the sentence rewritten].
+   * Rewritten, not patched: a dash stands where a comma, a colon or a full stop
+   * belongs, and which one belongs is a per-sentence question -- so these are
+   * written out rather than generated. Same brittleness as HIDDEN_FAQ_QUESTIONS:
+   * reword one of these in the bundle and its dash comes back, which the sweep
+   * below then catches.
+   *
+   * A list rather than a map because it is only ever consulted for a text node
+   * that already contains a dash, which is a handful of nodes on any page.
+   *
+   * Three of these are on screens no longer reachable (the Book page, and the
+   * group-booking FAQ entry that is hidden on the About page). They are here so
+   * that the page has no em dashes in it rather than none you can currently get
+   * to -- if either ever comes back, it comes back rewritten.
+   */
+  var BUNDLE_REWRITES = [
+    [
+      'Rotating objectives every game day. Marshals brief every round ' +
+        EM_DASH +
+        ' no experience required.',
+      'Rotating objectives every game day. Marshals brief every round, no experience ' +
+        'required.',
+    ],
+    [
+      'Lock in your slot in under two minutes. Pay nothing now ' +
+        EM_DASH +
+        ' settle up at the field.',
+      'Lock in your slot in under two minutes. Pay nothing now, settle up at the field.',
+    ],
+    [
+      // Follows "…the notorious <span>Castle</span>", so the replacement opens
+      // on the comma with no leading space of its own.
+      EM_DASH +
+        ' a stronghold on the hillside overlooking much of the battlefield. Holding it ' +
+        'is a serious tactical advantage, making it the most contested objective we run.',
+      ', a stronghold on the hillside overlooking much of the battlefield. Holding it ' +
+        'is a serious tactical advantage, making it the most contested objective we run.',
+    ],
+    [
+      'Bringing a squad? Great ' + EM_DASH + ' everyone books here',
+      'Bringing a squad? Great, everyone books here',
+    ],
+    [
+      'Absolutely. Bring your squad ' +
+        EM_DASH +
+        ' book everyone in one reservation and we’ll set aside a staging area. For ' +
+        'private field buyouts, hit the contact page.',
+      'Absolutely, bring your squad. Book everyone in one reservation and we’ll set ' +
+        'aside a staging area. For private field buyouts, hit the contact page.',
+    ],
+    [
+      'Games run rain or shine. We only cancel for lightning or unsafe conditions ' +
+        EM_DASH +
+        ' you’ll get an email if a game is called.',
+      'Games run rain or shine. We only cancel for lightning or unsafe conditions, and ' +
+        'you’ll get an email if a game is called.',
+    ],
+    [
+      'Eye protection stays on until inside the designated safe zone ' +
+        EM_DASH +
+        ' removing it in an active area means immediate removal.',
+      'Eye protection stays on until inside the designated safe zone. Removing it in an ' +
+        'active area means immediate removal.',
+    ],
+    [
+      'AR-platform replicas are NOT SMGs regardless of barrel length, stock, magazine ' +
+        'or caliber conversion ' +
+        EM_DASH +
+        ' semi only.',
+      'AR-platform replicas are NOT SMGs regardless of barrel length, stock, magazine ' +
+        'or caliber conversion. Semi only.',
+    ],
+    [
+      'Dead men don’t talk ' + EM_DASH + ' no relaying enemy positions once hit.',
+      'Dead men don’t talk. No relaying enemy positions once hit.',
+    ],
+  ];
 
   var mapsQuery = encodeURIComponent('Coyote Ridge Airsoft, ' + FIELD_ADDRESS);
   // Keyless embed. The official Maps Embed API needs a billing-enabled key;
@@ -473,7 +557,7 @@
       el(
         'p',
         null,
-        'Sign it here before you arrive — it takes two minutes and covers you for a ' +
+        'Sign it here before you arrive. It takes two minutes and covers you for a ' +
           'year of game days. Players under 18 need a parent or legal guardian to sign. ' +
           'No signed waiver, no check-in.',
       ),
@@ -690,6 +774,72 @@
   }
 
   // -------------------------------------------------------------------------
+  // Em dashes
+  // -------------------------------------------------------------------------
+
+  /**
+   * Walks the rendered page and takes every em dash out of it.
+   *
+   * A table lookup first, so the sentences that matter are rewritten rather than
+   * patched; anything the table does not name falls back to a mechanical fix,
+   * which is what makes the guarantee "no em dashes on the page" rather than "no
+   * em dashes we thought of". A dash between spaces becomes a comma, since that
+   * is what it nearly always stands in for; a bare one becomes a hyphen.
+   *
+   * SCRIPT and STYLE are skipped, and not only for tidiness: the bundle ships
+   * its component source in an inline `<script type="text/x-dc">`, em dashes and
+   * all, and rewriting that would edit the source of the very tree being
+   * rendered.
+   *
+   * Runs last in apply(), after the passes that replace whole sentences of the
+   * bundle's copy, so it sees the final text rather than the text on its way
+   * there.
+   */
+  function rewriteEmDashes() {
+    if (!document.body) return;
+
+    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (node) {
+        var tag = node.parentNode ? node.parentNode.nodeName : '';
+        if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT') {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return node.nodeValue.indexOf(EM_DASH) === -1
+          ? NodeFilter.FILTER_REJECT
+          : NodeFilter.FILTER_ACCEPT;
+      },
+    });
+
+    var node;
+    while ((node = walker.nextNode())) {
+      var trimmed = node.nodeValue.trim();
+      var replacement = null;
+
+      for (var i = 0; i < BUNDLE_REWRITES.length; i++) {
+        if (BUNDLE_REWRITES[i][0] === trimmed) {
+          replacement = BUNDLE_REWRITES[i][1];
+          break;
+        }
+      }
+
+      // The fallback works on the raw value rather than the trimmed one, so a
+      // node that is only part of a sentence keeps the spacing that joins it to
+      // the rest. Table entries replace the node whole, trim included.
+      if (replacement === null) {
+        replacement = node.nodeValue
+          .split(' ' + EM_DASH + ' ')
+          .join(', ')
+          .split(EM_DASH)
+          .join('-');
+      }
+
+      // Conditional, like every other write onto the bundle's own nodes: this
+      // one runs inside the tree the MutationObserver watches.
+      if (node.nodeValue !== replacement) node.nodeValue = replacement;
+    }
+  }
+
+  // -------------------------------------------------------------------------
   // Mobile navigation
   // -------------------------------------------------------------------------
 
@@ -843,6 +993,7 @@
       enhanceSchedules();
       enhanceGamesPage();
       enhanceGames();
+      rewriteEmDashes();
     } catch (err) {
       // A broken enhancement must not take the page down with it.
       console.warn('[site-enhance]', err);

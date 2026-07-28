@@ -166,7 +166,7 @@
     var lead = result.alreadySigned
       ? '<strong>Already on file.</strong> We have this signature from ' +
         new Date(result.signedAt).toLocaleDateString() + ', valid until ' + until + '.'
-      : '<strong>Signed.</strong> Valid until ' + until + ' — one year of game days.';
+      : '<strong>Signed.</strong> Valid until ' + until + ', one year of game days.';
     var linked = result.linkedAttendees > 0
       ? ' It has been attached to your existing booking, so you are clear for check-in.'
       : ' Book a game day when you are ready; check-in will find this waiver by your email address.';
@@ -186,7 +186,7 @@
     if (standalone) {
       el.intro.textContent =
         'Every player signs this before stepping on the field. Sign it once here and it ' +
-        'covers you for a year of game days — bring nothing but your ID. Players under 18 ' +
+        'covers you for a year of game days, so bring nothing but your ID. Players under 18 ' +
         'must be signed in by a parent or legal guardian.';
     } else {
       el.heading.textContent = 'Sign your waiver';

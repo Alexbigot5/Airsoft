@@ -6,7 +6,12 @@
  *   - an Instagram button and a directions link on the Contact page
  *   - the liability waiver call-to-action on the Games page
  *   - the real game-day schedule, replacing the export's sample games
+ *   - a photo gallery on the home page, in place of the invented game modes
  *   - a working navigation menu on phones
+ *
+ * It also corrects what the export made up: the field's phone number, address
+ * and email, its "open Sat + Sun" status, and the footer's stand-in operator
+ * name. Anything the export invented and this file does not replace is a bug.
  *
  * It also takes two things away: the Book page, whose booking form was a mock,
  * and the per-game player counts, which were sample numbers with nothing behind
@@ -39,7 +44,41 @@
   var INSTAGRAM_URL = 'https://www.instagram.com/coyote__ridge/';
   var INSTAGRAM_HANDLE = '@coyote__ridge';
   var FIELD_ADDRESS = '84562 Territorial Hwy, Eugene, OR';
-  var WAIVER_URL = '/waiver';
+  var FIELD_PHONE = '541-799-6823';
+  var FIELD_PHONE_HREF = 'tel:+15417996823';
+  var FIELD_EMAIL = 'games@coyoteridge.gg';
+  var FOOTER_LEGAL = '© 2026 Coyote Ridge Airsoft';
+
+  /**
+   * The waiver every player signs. This used to be `/waiver`, the in-house page
+   * backed by `POST /api/waiver/sign`; the field collects signatures on a Google
+   * Form instead, so every waiver link on the marketing page points there.
+   *
+   * It is off-origin, which matters twice below: the links that use it are built
+   * with externalLink() so they open in a new tab rather than dropping visitors
+   * out of the site, and site-hook.js leaves off-origin anchors alone, so none of
+   * them can be mistaken for one of the bundle's mock booking buttons.
+   *
+   * `/waiver`, `/register` and the API behind them are untouched and still live
+   * at their URLs — this changes where the marketing page points, nothing else.
+   */
+  var WAIVER_URL =
+    'https://docs.google.com/forms/d/e/1FAIpQLScF4dQoVeV7ocSxWfxiJy2iJOk4NLe63kIB5EHBkLw38KxDcA/viewform?usp=header';
+
+  /**
+   * The hero's two status chips. The export shipped "OPEN SAT + SUN" beside a
+   * "NEXT GAME: SAT 08:30" that was pinned to its sample schedule; the field
+   * opens for the scheduled events in EVENTS and nothing else, so the first is
+   * rewritten and the second — which would need updating after every game day to
+   * stay true — goes.
+   */
+  var FIELD_STATUS = '● FIELD STATUS: OPEN FOR SCHEDULED EVENTS ONLY';
+
+  /** Sat + Sun opening hours the field does not keep. */
+  var CONTACT_GAME_DAYS = 'Scheduled events only · 9:00 AM – 4:00 PM';
+
+  /** The export's hero coordinates are in Minnesota. These are not coordinates. */
+  var HERO_EYEBROW = 'Eugene, Oregon · Outdoor woodland field';
 
   /**
    * The game days, and the only place to edit them. Each `url` is that day's
@@ -84,6 +123,57 @@
     'Bring your own gear',
   ];
 
+  /**
+   * The home page gallery, and the only place to edit it. Files live in
+   * `public/img/` and are served straight from Workers Assets.
+   *
+   * It replaces the export's "Five ways to run the field" — five invented game
+   * modes with invented player counts, in the same register as the sample
+   * schedule and the mock booking form. Photographs of the actual field say more
+   * about a game day than a made-up mode list, and cannot go stale.
+   *
+   * `wide` spans two columns. Exactly one entry carries it, which is what makes
+   * the seven photos fill the four-column grid to the edge — two full rows, no
+   * ragged tail. Adding or removing a photo means re-checking that arithmetic.
+   */
+  var GALLERY = [
+    {
+      src: '/img/staging-area.jpg',
+      alt: 'Two players in helmets and plate carriers at the staging area before a game',
+      wide: true,
+    },
+    {
+      src: '/img/wooded-hillside.jpg',
+      alt: 'A player moving up the steep, fern-covered hillside through the trees',
+    },
+    {
+      src: '/img/wooden-barricade.jpg',
+      alt: 'A player firing over a wooden barricade into the treeline',
+    },
+    {
+      src: '/img/tarp-barricade.jpg',
+      alt: 'A player pushing past a tarp barricade with a scoped rifle up',
+    },
+    {
+      src: '/img/tire-stack.jpg',
+      alt: 'A player holding an angle between a tree and a stack of tires',
+    },
+    {
+      src: '/img/squad-treeline.jpg',
+      alt: 'A squad regrouping in the trees between objectives',
+    },
+    {
+      src: '/img/structure-overwatch.jpg',
+      alt: "A player on overwatch beside one of the field's wooden structures",
+    },
+  ];
+
+  var GALLERY_EYEBROW = '01 / Field gallery';
+  var GALLERY_HEADING = 'Shots from game day';
+  var GALLERY_INTRO =
+    'Every photo here is from a Coyote Ridge game day — the terrain, the ' +
+    'structures and the players who show up for them.';
+
   var SCHEDULE_INTRO =
     'Two open play events, and everyone is welcome. Games run rain or shine — gates ' +
     'open 60 minutes before first call for chrono and the safety brief.';
@@ -100,6 +190,15 @@
    * bundle and the entry comes back.
    */
   var HIDDEN_FAQ_QUESTIONS = ['how old do i have to be?', 'can i book for a group or party?'];
+
+  /**
+   * The footer's "Play" column. Its three entries were never links -- plain
+   * spans naming services the field does not sell separately -- so the column
+   * goes whole rather than leaving a heading over an empty space. Matching any
+   * one of the three finds it, so re-wording a single entry does not bring the
+   * column back.
+   */
+  var HIDDEN_FOOTER_LINKS = ['open play', 'private events', 'beginner sessions'];
 
   var mapsQuery = encodeURIComponent('Coyote Ridge Airsoft, ' + FIELD_ADDRESS);
   // Keyless embed. The official Maps Embed API needs a billing-enabled key;
@@ -133,6 +232,31 @@
     return (text || '').replace(/[→➔➤>]/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
   }
 
+  /**
+   * Writes text and attributes onto the bundle's own nodes only when the value
+   * would actually change, for the same reason setClass() below is conditional:
+   * these live inside the tree the MutationObserver watches, and an
+   * unconditional write on every pass would wake the observer, which would
+   * schedule another pass, forever.
+   */
+  function setText(node, text) {
+    if (node && node.textContent !== text) node.textContent = text;
+  }
+
+  function setAttr(node, name, value) {
+    if (node && node.getAttribute(name) !== value) node.setAttribute(name, value);
+  }
+
+  /** The first element under `root` whose text matches, ignoring case and arrows. */
+  function findByText(root, selector, text) {
+    var nodes = (root || document).querySelectorAll(selector);
+    var wanted = normalise(text);
+    for (var i = 0; i < nodes.length; i++) {
+      if (normalise(nodes[i].textContent) === wanted) return nodes[i];
+    }
+    return null;
+  }
+
   // -------------------------------------------------------------------------
   // Stylesheet
   // -------------------------------------------------------------------------
@@ -147,12 +271,117 @@
   }
 
   // -------------------------------------------------------------------------
+  // Home page: the hero's status chips, and the gallery
+  // -------------------------------------------------------------------------
+
+  /** The hero exists on the home page and nowhere else. */
+  function heroSection() {
+    return document.querySelector('.hero');
+  }
+
+  function enhanceHero() {
+    var hero = heroSection();
+    if (!hero) return;
+
+    var eyebrow = hero.querySelector('.eyebrow .tag');
+    if (eyebrow) setText(eyebrow, HERO_EYEBROW);
+
+    var status = hero.querySelector('.chip-live');
+    if (!status) return;
+    setText(status, FIELD_STATUS);
+
+    // Everything else in that row is the "NEXT GAME" chip. Hidden rather than
+    // removed, like the sample game rows: React owns it and puts back anything
+    // deleted from under it on the next render.
+    var chips = status.parentElement ? status.parentElement.querySelectorAll('.chip') : [];
+    for (var i = 0; i < chips.length; i++) {
+      setClass(chips[i], 'cr-hidden', chips[i] !== status);
+    }
+  }
+
+  /**
+   * The five game-mode cards, replaced by photographs of the field.
+   *
+   * The section is found through `.modecard`, which the Games page also uses for
+   * its safety-brief cards -- so this runs only where the hero is, and the two
+   * can never be confused. The cards themselves are hidden rather than removed,
+   * which is also what keeps their grid findable on every re-render; the heading
+   * and blurb around them are the bundle's own nodes and are rewritten in place.
+   */
+  function enhanceHomeGallery() {
+    if (!heroSection()) return; // not the home page
+
+    var card = document.querySelector('.modecard');
+    if (!card) return;
+
+    var grid = plainParent(card);
+    var wrap = grid && grid.closest ? grid.closest('.wrap') : null;
+    if (!grid || !wrap) return;
+
+    setClass(grid, 'cr-hidden', true);
+    setText(wrap.querySelector('.eyebrow .tag'), GALLERY_EYEBROW);
+    setText(wrap.querySelector('h2.display'), GALLERY_HEADING);
+
+    // The blurb sits beside the heading, in the flex row above the grid.
+    var heading = wrap.querySelector('h2.display');
+    var intro = heading && heading.parentElement ? heading.parentElement.querySelector('p') : null;
+    setText(intro, GALLERY_INTRO);
+
+    if (wrap.querySelector('.cr-gallery')) return;
+
+    var gallery = el('div', 'cr-gallery');
+    for (var i = 0; i < GALLERY.length; i++) {
+      var cell = el('figure', 'cr-gallery-cell' + (GALLERY[i].wide ? ' cr-gallery-wide' : ''));
+      var img = el('img');
+      img.src = GALLERY[i].src;
+      img.alt = GALLERY[i].alt;
+      // Below the fold on every viewport, and seven full-width photos is real
+      // weight to put in front of the first paint.
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      cell.appendChild(img);
+      gallery.appendChild(cell);
+    }
+    wrap.appendChild(gallery);
+  }
+
+  // -------------------------------------------------------------------------
   // Contact page: map, directions, Instagram
   // -------------------------------------------------------------------------
+
+  /**
+   * The phone / email / game-days cells under the map.
+   *
+   * The export wrote a real-looking Coyote Ridge phone number and email into the
+   * link *text* but left its own stand-ins in the `href`s -- so the page read
+   * correctly and dialled a 612 number nobody at the field answers, and mailed
+   * ironsight.gg. Tapping a phone number on a phone is the whole point of the
+   * cell, which makes this the one piece of placeholder content here that was
+   * doing damage rather than just looking wrong.
+   */
+  function fixContactDetails(info) {
+    if (!info) return;
+
+    var tel = info.querySelector('a[href^="tel:"]');
+    setText(tel, FIELD_PHONE);
+    setAttr(tel, 'href', FIELD_PHONE_HREF);
+
+    var mail = info.querySelector('a[href^="mailto:"]');
+    // Left uppercase: the cell is styled for it, and the text is the address.
+    setText(mail, FIELD_EMAIL.toUpperCase());
+    setAttr(mail, 'href', 'mailto:' + FIELD_EMAIL);
+
+    // "Sat + Sun · 08:30-16:00" contradicts the hero's field status, which is
+    // the schedule the field actually keeps.
+    var label = findByText(info, '.label', 'Game days');
+    if (label) setText(label.nextElementSibling, CONTACT_GAME_DAYS);
+  }
 
   function enhanceContact() {
     var holder = document.querySelector('.mapph');
     if (!holder) return; // not the Contact page
+
+    fixContactDetails(holder.nextElementSibling);
 
     if (!holder.querySelector('.cr-map')) {
       var slot = holder.querySelector('image-slot');
@@ -230,8 +459,8 @@
     );
     band.appendChild(copy);
 
-    var button = el('a', 'btn', 'Sign the liability waiver →');
-    button.href = WAIVER_URL;
+    var button = externalLink(WAIVER_URL, 'btn');
+    button.textContent = 'Sign the liability waiver →';
     band.appendChild(button);
 
     wrap.appendChild(band);
@@ -392,6 +621,54 @@
   }
 
   // -------------------------------------------------------------------------
+  // Footer
+  // -------------------------------------------------------------------------
+
+  /**
+   * Three things, all of them the export's stand-ins:
+   *
+   *   - the "Play" column, three plain spans naming services sold as one thing
+   *   - "Field HQ", a Timberline Rd address in a Sector 7 that does not exist,
+   *     over the same unanswered 612 number the Contact page linked
+   *   - "© 2026 Ironsight Airsoft — placeholder content", which named a
+   *     different operator and then said so
+   *
+   * Found by their own text rather than by position, so a column reordered in
+   * the bundle does not silently start rewriting the wrong one.
+   */
+  function enhanceFooter() {
+    var footer = document.querySelector('.footer');
+    if (!footer) return;
+
+    var links = footer.querySelectorAll('.footlink');
+    for (var i = 0; i < links.length; i++) {
+      if (HIDDEN_FOOTER_LINKS.indexOf(normalise(links[i].textContent)) === -1) continue;
+      var column = links[i].parentElement;
+      if (!column) continue;
+      setClass(column, 'cr-hidden', true);
+      // .fgrid is four fixed tracks, so hiding a column would leave the last one
+      // empty and pull Field HQ into the narrow slot meant for a link list.
+      if (column.parentElement) setClass(column.parentElement, 'cr-footer-3col', true);
+    }
+
+    var hq = findByText(footer, '.tag', 'Field HQ');
+    if (hq && hq.parentElement) {
+      // One line rather than the export's two: the street address and the city
+      // are the address, and "Open Sat + Sun" was the second line's other half.
+      setText(hq.parentElement.querySelector('p'), FIELD_ADDRESS);
+
+      var tel = hq.parentElement.querySelector('a[href^="tel:"]');
+      setText(tel, FIELD_PHONE);
+      setAttr(tel, 'href', FIELD_PHONE_HREF);
+    }
+
+    var tags = footer.querySelectorAll('.tag');
+    for (var j = 0; j < tags.length; j++) {
+      if (tags[j].textContent.indexOf('©') !== -1) setText(tags[j], FOOTER_LEGAL);
+    }
+  }
+
+  // -------------------------------------------------------------------------
   // Mobile navigation
   // -------------------------------------------------------------------------
 
@@ -431,8 +708,8 @@
   }
 
   function menuLink(label, href, className) {
-    var item = el('a', 'cr-menu-item ' + (className || ''), label);
-    item.href = href;
+    var item = externalLink(href, 'cr-menu-item ' + (className || ''));
+    item.textContent = label;
     return item;
   }
 
@@ -538,6 +815,9 @@
       hideRemovedNav();
       hideRemovedFaqs();
       enhanceNav();
+      enhanceFooter();
+      enhanceHero();
+      enhanceHomeGallery();
       enhanceContact();
       enhanceSchedules();
       enhanceGamesPage();

@@ -273,6 +273,16 @@ up on the roster for staff to resolve.
   field does not sell separately. `.fgrid` is four fixed tracks, so
   `site-enhance.css` re-cuts them to three above 900px; below that the bundle
   collapses the footer to one column anyway.
+- **The page has no em dashes in it.** `BUNDLE_REWRITES` in
+  `public/site-enhance.js` pairs each sentence the export wrote with that
+  sentence rewritten, because a dash stands where a comma, a colon or a full
+  stop belongs and which one belongs is a per-sentence question.
+  `rewriteEmDashes()` applies the table to the rendered page, then falls back to
+  a mechanical fix for anything the table does not name, which is what makes the
+  guarantee hold for copy nobody has looked at yet. Reword one of those
+  sentences in the bundle and the table entry stops matching, the same
+  brittleness `HIDDEN_FAQ_QUESTIONS` has; the fallback is the safety net. Still
+  outstanding: the `<title>` of the waiver, register, success and admin pages.
 - **Two FAQ entries are gone** from the About page — the age question and the
   group-booking one. `HIDDEN_FAQ_QUESTIONS` in `public/site-enhance.js` matches
   them on the question text, so rewording a question in the bundle brings its

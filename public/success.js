@@ -100,7 +100,7 @@
       el.heading.textContent = 'Payment not confirmed yet';
       el.status.innerHTML =
         'Your spots are still held. If you completed payment this usually settles within a ' +
-        'minute — <a href="">refresh</a> to check again.';
+        'minute. <a href="">Refresh</a> to check again.';
       return;
     }
 

@@ -88,7 +88,7 @@
       var option = document.createElement('option');
       option.value = String(ev.id);
       option.textContent =
-        new Date(ev.startsAt).toLocaleString() + ' — ' + ev.title +
+        new Date(ev.startsAt).toLocaleString() + ' · ' + ev.title +
         ' (' + ev.spotsTaken + '/' + ev.capacity + ')';
       el.picker.appendChild(option);
     });
@@ -146,7 +146,7 @@
           : '<span class="pill bad">Missing</span>';
 
       var minorNote = a.isMinor
-        ? '<div class="muted small">Minor · guardian: ' + escapeHtml(a.guardianName || '—') + '</div>'
+        ? '<div class="muted small">Minor · guardian: ' + escapeHtml(a.guardianName || '–') + '</div>'
         : '';
       var emergency = a.emergencyContact
         ? '<div class="muted small">ICE: ' + escapeHtml(a.emergencyContact.name) + ' ' +
@@ -164,10 +164,10 @@
           : '<button class="btn small ghost" data-pay="' + escapeHtml(a.bookingRef) + '">Mark paid</button>') +
         '</td>' +
         '<td>' + waiverPill + '</td>' +
-        '<td>' + (a.chronoOk ? '<span class="pill good">OK</span>' : '<span class="muted">—</span>') + '</td>' +
+        '<td>' + (a.chronoOk ? '<span class="pill good">OK</span>' : '<span class="muted">–</span>') + '</td>' +
         '<td class="small">' + (a.checkedInAt
           ? escapeHtml(new Date(a.checkedInAt).toLocaleTimeString())
-          : '<span class="muted">—</span>') + '</td>' +
+          : '<span class="muted">–</span>') + '</td>' +
         '<td>' + (a.checkedInAt
           ? '<button class="btn small ghost" data-undo="' + a.attendeeId + '">Undo</button>'
           : '<button class="btn small" data-checkin="' + a.attendeeId + '"' +

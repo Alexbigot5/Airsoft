@@ -94,7 +94,7 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Contact page: Instagram + directions
+   Contact page: Instagram, Discord + directions
    --------------------------------------------------------------------------- */
 
 .cr-social {
@@ -104,7 +104,8 @@
   margin-top: 12px;
 }
 
-.cr-ig svg {
+/* Was .cr-ig, when Instagram was the only icon button in this row. */
+.cr-social-btn svg {
   width: 18px;
   height: 18px;
   flex: none;

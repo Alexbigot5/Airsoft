@@ -6,8 +6,9 @@ waivers and payments.
 The site itself (`public/index.html`) is a bundled export and is treated
 as **read-only** — the Worker serves it and injects two scripts and a stylesheet
 that carry every change made to it since: the real game-day schedule, the map,
-the Instagram link, the waiver call-to-action, the home-page gallery, a mobile
-menu, the field's real contact details, and the removal of its mock Book page.
+the Instagram and Discord links, the waiver call-to-action, the home-page
+gallery, a mobile menu, the field's real contact details, and the removal of its
+mock Book page.
 Everything under `src/`, `public/` and `migrations/` is the part you maintain.
 
 ## What it does

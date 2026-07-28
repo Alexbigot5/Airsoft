@@ -3,7 +3,7 @@
  * (see src/index.ts). Adds the things the generated bundle does not have:
  *
  *   - a live Google Maps embed where the Contact page has a placeholder slot
- *   - an Instagram button and a directions link on the Contact page
+ *   - Instagram, Discord and directions buttons on the Contact page
  *   - the liability waiver call-to-action on the Games page
  *   - the real game-day schedule, replacing the export's sample games
  *   - a photo gallery on the home page, in place of the invented game modes
@@ -43,6 +43,7 @@
 
   var INSTAGRAM_URL = 'https://www.instagram.com/coyote__ridge/';
   var INSTAGRAM_HANDLE = '@coyote__ridge';
+  var DISCORD_URL = 'https://discord.com/invite/k8CXcKvjGg';
   var FIELD_ADDRESS = '84562 Territorial Hwy, Eugene, OR';
   var FIELD_PHONE = '541-799-6823';
   var FIELD_PHONE_HREF = 'tel:+15417996823';
@@ -212,6 +213,17 @@
     '<rect x="2" y="2" width="20" height="20" rx="5"></rect>' +
     '<circle cx="12" cy="12" r="4"></circle>' +
     '<circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"></circle></svg>';
+
+  // A chat mark rather than the Discord wordmark glyph: it sits beside the
+  // Instagram icon above, and the two only read as a pair drawn in the same
+  // single-weight stroke. The link text is what names the destination.
+  var DISCORD_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 ' +
+    '8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 8.5-8.5h.5a8.5 8.5 0 0 1 8 8v.5z"></path>' +
+    '<circle cx="9.5" cy="11.5" r="1.1" fill="currentColor" stroke="none"></circle>' +
+    '<circle cx="14.5" cy="11.5" r="1.1" fill="currentColor" stroke="none"></circle></svg>';
 
   function el(tag, className, text) {
     var node = document.createElement(tag);
@@ -411,10 +423,19 @@
 
     var row = el('div', 'cr-social');
 
-    var ig = externalLink(INSTAGRAM_URL, 'btn cr-ig');
+    var ig = externalLink(INSTAGRAM_URL, 'btn cr-social-btn');
     ig.innerHTML = INSTAGRAM_SVG;
     ig.appendChild(document.createTextNode('Instagram ' + INSTAGRAM_HANDLE));
     row.appendChild(ig);
+
+    // Peer of the Instagram button, not a lesser version of it: both are the
+    // field's community, and the Discord is where a game day is actually
+    // organised. The ghost treatment stays on "Get directions", which is the
+    // one thing in this row that is not somewhere to go and talk to people.
+    var discord = externalLink(DISCORD_URL, 'btn cr-social-btn');
+    discord.innerHTML = DISCORD_SVG;
+    discord.appendChild(document.createTextNode('Join the Discord'));
+    row.appendChild(discord);
 
     var directions = externalLink(MAP_LINK_URL, 'btn btn-ghost');
     directions.textContent = 'Get directions →';

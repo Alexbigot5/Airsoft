@@ -6,9 +6,9 @@ waivers and payments.
 The site itself (`public/index.html`) is a bundled export and is treated
 as **read-only** — the Worker serves it and injects two scripts and a stylesheet
 that carry every change made to it since: the real game-day schedule, the map,
-the Instagram link, the waiver call-to-action, a mobile menu, and the removal of
-its mock Book page. Everything under `src/`, `public/` and `migrations/` is the
-part you maintain.
+the Instagram link, the waiver call-to-action, the home-page gallery, a mobile
+menu, the field's real contact details, and the removal of its mock Book page.
+Everything under `src/`, `public/` and `migrations/` is the part you maintain.
 
 ## What it does
 
@@ -18,7 +18,10 @@ part you maintain.
   with the exact waiver text hash, date of birth, guardian details for minors,
   emergency contact, timestamp, IP and user agent. Valid for one year. Reachable
   two ways: the seat-specific link that comes with a booking, and a standalone
-  `/waiver` page linked from the Games screen for signing ahead of time.
+  `/waiver` page for signing ahead of time. **The marketing page no longer links
+  to `/waiver`** — its waiver buttons point at the field's Google Form (see
+  `WAIVER_URL` in `public/site-enhance.js`). Both pages still work; only the
+  links moved.
 - **Payments** — Stripe Checkout. The Worker creates the session; a signed,
   idempotent webhook is what actually marks a booking paid.
 - **Staff console** — `/admin`, gated by a shared token. Day-of roster, mark
@@ -40,7 +43,8 @@ src/
 public/
   index.html                the marketing page (read-only, never edited)
   site-hook.js              injected into it to redirect the mock "Book" buttons
-  site-enhance.js/.css      injected too: schedule, map, Instagram, waiver, nav
+  site-enhance.js/.css      injected too: schedule, map, gallery, waiver, nav
+  img/                      the home-page gallery photographs
   register / waiver / success / admin pages, app.css
 test/api.spec.ts            the rules that cost money or create liability
 ```
@@ -73,9 +77,9 @@ exercises the production path rather than a shortcut around it.
 5. `/admin` — sign in with the token from `.dev.vars` (`dev-admin-token`), pick
    the game day, check both players in. Try checking in an unsigned attendee:
    it is refused, by design.
-6. `/waiver` with no token — the standalone waiver, linked from the Games page.
-   Sign it with an email that has no booking, then book with that same email and
-   check in: the signature is found by email and entry is allowed.
+6. `/waiver` with no token — the standalone waiver. Sign it with an email that
+   has no booking, then book with that same email and check in: the signature is
+   found by email and entry is allowed.
 
 Inspect state directly at any point:
 
@@ -238,6 +242,37 @@ up on the roster for staff to resolve.
   This list is separate from the `events` table in D1, which is what `/register`
   and the staff console run on; if sign-up ever moves back in-house, the Games
   page should read `/api/events` instead of this array.
+- **The waiver is a Google Form.** Every waiver link on the marketing page — the
+  call-to-action on the Games page and the item in the phone menu — points at
+  it. `WAIVER_URL` in `public/site-enhance.js` is the one place to change it.
+  The in-house `/waiver` page and `POST /api/waiver/sign` are untouched and
+  still work; if signing ever moves back in-house, point that constant at
+  `/waiver` again and nothing else needs to change.
+- **The home page's game modes are a gallery now.** The export's "Five ways to
+  run the field" was five invented modes with invented player counts, of a piece
+  with the sample schedule and the mock booking form. `GALLERY` in
+  `public/site-enhance.js` lists the photographs that replaced them; the files
+  live in `public/img/`. Exactly one entry is `wide: true`, which is what makes
+  seven photos fill the four-column grid to the edge — adding or removing one
+  means re-checking that.
+- **The export invented the field's contact details.** It wrote the real phone
+  number and email into the link *text* on the Contact page but left its own
+  stand-ins in the `href`s, so the page read correctly and dialled a 612 number
+  and mailed ironsight.gg. The footer had a Timberline Rd address in a Sector 7
+  that does not exist, the hero had coordinates in Minnesota, and the copyright
+  line named a different operator and then said it was placeholder content. All
+  of it is corrected from the constants at the top of `public/site-enhance.js`.
+- **"Open Sat + Sun" was never true.** The hero's field status reads "open for
+  scheduled events only" and the Contact page's game-day hours match it, because
+  the field opens for the days in `EVENTS` and nothing else. The hero's second
+  chip — "NEXT GAME: SAT 08:30" — is hidden rather than rewritten: it would need
+  updating after every game day to stay true, and the schedule below it is
+  already the answer.
+- **The footer's "Play" column is gone**, along with the four-column track it
+  sat in. Its three entries were plain spans, not links, naming services the
+  field does not sell separately. `.fgrid` is four fixed tracks, so
+  `site-enhance.css` re-cuts them to three above 900px; below that the bundle
+  collapses the footer to one column anyway.
 - **Two FAQ entries are gone** from the About page — the age question and the
   group-booking one. `HIDDEN_FAQ_QUESTIONS` in `public/site-enhance.js` matches
   them on the question text, so rewording a question in the bundle brings its

@@ -235,8 +235,8 @@ up on the roster for staff to resolve.
   existing signature instead of stacking up rows, while a *different* name or
   date of birth is treated as a correction and does get its own row.
 - **The game days live in `public/site-enhance.js`.** `EVENTS` at the top of that
-  file is the one place to edit them: date, title, time, blurb, and the
-  registration form each one books through. They replace the sample games the
+  file is the one place to edit them: date, title, time, and the registration
+  form each one books through. They replace the sample games the
   export shipped, on both the home page and the Games page. There are no spot
   counts — the export showed "6 / 40 spots left" from sample data with nothing
   behind it, which reads as live availability and is worse than showing nothing.
@@ -284,10 +284,18 @@ up on the roster for staff to resolve.
   sentences in the bundle and the table entry stops matching, the same
   brittleness `HIDDEN_FAQ_QUESTIONS` has; the fallback is the safety net. Still
   outstanding: the `<title>` of the waiver, register, success and admin pages.
-- **Two FAQ entries are gone** from the About page — the age question and the
-  group-booking one. `HIDDEN_FAQ_QUESTIONS` in `public/site-enhance.js` matches
-  them on the question text, so rewording a question in the bundle brings its
-  entry back.
+- **The FAQ is one entry.** "Do I need my own gear?" is all that is left on the
+  About page, and its answer is rewritten to say that gear rentals are not
+  available — the thing players turn up expecting, which the export's answer did
+  not mention. The age, group-booking, what-to-bring and rain questions are
+  hidden. `HIDDEN_FAQ_QUESTIONS` and `FAQ_ANSWERS` in `public/site-enhance.js`
+  both match on the question text, so rewording a question in the bundle brings
+  its entry back, or brings back the export's own answer.
+- **The Games page safety brief is gone** — six cards paraphrasing rules the
+  Rules page already carries in full and dated, which meant two places saying
+  the same thing and one of them maintained. `hideSafetyBrief()` in
+  `public/site-enhance.js` finds it by its heading and hides the divider above
+  it too. The Rules page is untouched.
 - **The Book page is gone**, along with its mock booking form. Buttons that name
   no particular game day ("Reserve a spot", the nav's "Reserve →") now go to the
   Games page, since sign-up is per event and there is nowhere else for a generic

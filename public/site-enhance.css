@@ -182,14 +182,7 @@
 .cr-event-title {
   font-size: 22px;
   font-weight: 600;
-  margin: 0 0 4px;
-}
-
-.cr-event-note {
-  color: var(--mut);
-  font-size: 14px;
   margin: 0;
-  max-width: 460px;
 }
 
 .cr-price {

@@ -14,10 +14,12 @@
  * and email, its "open Sat + Sun" status, and the footer's stand-in operator
  * name. Anything the export invented and this file does not replace is a bug.
  *
- * It also takes two things away: the Book page, whose booking form was a mock,
- * and the per-game player counts, which were sample numbers with nothing behind
- * them. Sign-up is per event, through the registration form linked from each
- * game day in EVENTS below.
+ * It also takes things away: the Book page, whose booking form was a mock; the
+ * per-game player counts, which were sample numbers with nothing behind them;
+ * and the copy that repeated itself, from the Games page safety brief -- a
+ * paraphrase of the Rules page -- down to the FAQ entries answered elsewhere.
+ * Sign-up is per event, through the registration form linked from each game day
+ * in EVENTS below.
  *
  * Three properties of the host page shape all of this.
  *
@@ -90,6 +92,9 @@
    * No spots or capacity here on purpose. The export showed "6 / 40 spots left"
    * from sample data with nothing behind it, which reads as live availability
    * and is worse than showing nothing.
+   *
+   * No blurb either: every game day ran the same one sentence under its title,
+   * which said nothing the chips and the schedule intro do not already say.
    */
   var EVENTS = [
     {
@@ -98,7 +103,6 @@
       day: 'SAT',
       title: 'Open Play',
       time: '9:00 AM – 4:00 PM',
-      note: 'Objective-based games run by marshals all day. Chrono and med on site.',
       url: 'https://form.jotform.com/261820920022041',
     },
     {
@@ -107,7 +111,6 @@
       day: 'SAT',
       title: 'Open Play',
       time: '9:00 AM – 4:00 PM',
-      note: 'Objective-based games run by marshals all day. Chrono and med on site.',
       url: 'https://form.jotform.com/261835114941153',
     },
   ];
@@ -190,8 +193,33 @@
    * wrote it. Normalised the same way as everything else here, so case and
    * spacing do not matter -- but the wording does: change the question in the
    * bundle and the entry comes back.
+   *
+   * "What should I bring?" and "What if it rains?" go for the same reason the
+   * game-day blurb did: the gear question below answers the first, and the
+   * schedule intro already says games run rain or shine.
    */
-  var HIDDEN_FAQ_QUESTIONS = ['how old do i have to be?', 'can i book for a group or party?'];
+  var HIDDEN_FAQ_QUESTIONS = [
+    'how old do i have to be?',
+    'can i book for a group or party?',
+    'what should i bring?',
+    'what if it rains?',
+  ];
+
+  /**
+   * The one FAQ entry left, with its answer rewritten. Keyed on the question the
+   * same way HIDDEN_FAQ_QUESTIONS is, and just as dependent on it: reword the
+   * question in the bundle and the export's own answer comes back.
+   *
+   * The export's answer listed what to wear and said nothing about rentals,
+   * which is the thing players actually turn up expecting.
+   */
+  var FAQ_ANSWERS = [
+    [
+      'do i need my own gear?',
+      'Yes. Every player brings their own marker, mask and BBs. Gear rentals are ' +
+        'not available at this time.',
+    ],
+  ];
 
   /**
    * The footer's "Play" column. Its three entries were never links -- plain
@@ -217,10 +245,10 @@
    * A list rather than a map because it is only ever consulted for a text node
    * that already contains a dash, which is a handful of nodes on any page.
    *
-   * Three of these are on screens no longer reachable (the Book page, and the
-   * group-booking FAQ entry that is hidden on the About page). They are here so
-   * that the page has no em dashes in it rather than none you can currently get
-   * to -- if either ever comes back, it comes back rewritten.
+   * Four of these are on screens no longer reachable (the Book page, and the
+   * group-booking and rain FAQ entries that are hidden on the About page). They
+   * are here so that the page has no em dashes in it rather than none you can
+   * currently get to -- if any of them ever comes back, it comes back rewritten.
    */
   var BUNDLE_REWRITES = [
     [
@@ -590,7 +618,6 @@
     chips.appendChild(el('span', 'chip', 'Everyone welcome'));
     body.appendChild(chips);
     body.appendChild(el('h3', 'cond cr-event-title', game.title));
-    body.appendChild(el('p', 'cr-event-note', game.note));
     row.appendChild(body);
 
     var price = el('div', 'cr-price');
@@ -678,7 +705,7 @@
   }
 
   // -------------------------------------------------------------------------
-  // Taken off the site: the Book page, and two FAQ entries
+  // Taken off the site: the Book page, the safety brief, and four FAQ entries
   // -------------------------------------------------------------------------
 
   function isHiddenNavLabel(label) {
@@ -706,17 +733,57 @@
     }
   }
 
+  /**
+   * The "Safety brief" section under the Games page schedule: six rule cards,
+   * "Field rules · non-negotiable" over them.
+   *
+   * The Rules page keeps the field's real rules, dated and in full, and these
+   * cards were a six-card paraphrase of them sitting one click away -- two
+   * places saying the same thing, only one of which is maintained.
+   *
+   * Found by its heading rather than by position, so a section reordered in the
+   * bundle does not take a different one with it, and hidden along with the
+   * `.hz-line` above it, which would otherwise be left ruling off nothing.
+   */
+  function hideSafetyBrief() {
+    var headings = document.querySelectorAll('h2.display');
+
+    for (var i = 0; i < headings.length; i++) {
+      if (normalise(headings[i].textContent) !== 'safety brief') continue;
+
+      var section = headings[i].closest ? headings[i].closest('.sec') : null;
+      if (!section) continue;
+      setClass(section, 'cr-hidden', true);
+
+      var divider = section.previousElementSibling;
+      if (divider && divider.classList.contains('hz-line')) {
+        setClass(divider, 'cr-hidden', true);
+      }
+    }
+  }
+
+  function faqAnswer(question) {
+    for (var i = 0; i < FAQ_ANSWERS.length; i++) {
+      if (FAQ_ANSWERS[i][0] === question) return FAQ_ANSWERS[i][1];
+    }
+    return null;
+  }
+
   function hideRemovedFaqs() {
     var items = document.querySelectorAll('.faqitem');
     var firstVisible = null;
 
     for (var i = 0; i < items.length; i++) {
       var question = items[i].querySelector('h3');
-      var hide =
-        !!question && HIDDEN_FAQ_QUESTIONS.indexOf(normalise(question.textContent)) !== -1;
+      var asked = question ? normalise(question.textContent) : '';
+      var hide = !!question && HIDDEN_FAQ_QUESTIONS.indexOf(asked) !== -1;
 
       setClass(items[i], 'cr-hidden', hide);
-      if (!hide && !firstVisible) firstVisible = items[i];
+      if (!hide) {
+        var answer = faqAnswer(asked);
+        if (answer) setText(items[i].querySelector('p'), answer);
+        if (!firstVisible) firstVisible = items[i];
+      }
     }
 
     // The stack's top border belongs to :first-child, which may now be hidden.
@@ -985,6 +1052,7 @@
       ensureStyles();
       hideRemovedNav();
       hideRemovedFaqs();
+      hideSafetyBrief();
       enhanceNav();
       enhanceFooter();
       enhanceHero();

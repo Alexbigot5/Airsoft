@@ -237,7 +237,11 @@ up on the roster for staff to resolve.
 - **The game days live in `public/site-enhance.js`.** `EVENTS` at the top of that
   file is the one place to edit them: date, title, time, and the registration
   form each one books through. They replace the sample games the
-  export shipped, on both the home page and the Games page. There are no spot
+  export shipped, on both the home page and the Games page. Two optional fields
+  cover an event that is not an ordinary open play day — `chips`, added to the
+  row's chip row, and `pricing`, which replaces the default `PRICING` ladder for
+  that event alone; the September camp out uses both, which is what lets it sit
+  in the same row layout as the Saturdays. There are no spot
   counts — the export showed "6 / 40 spots left" from sample data with nothing
   behind it, which reads as live availability and is worse than showing nothing.
   This list is separate from the `events` table in D1, which is what `/register`

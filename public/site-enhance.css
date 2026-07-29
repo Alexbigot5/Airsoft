@@ -378,7 +378,11 @@
   .cr-waiver-cta .btn { width: 100%; justify-content: center; }
 
   .cr-event { grid-template-columns: 1fr; gap: 14px; padding: 20px; }
-  .cr-price { justify-items: start; text-align: left; grid-auto-flow: column; gap: 10px; }
+  /* The price lines read across rather than down once the row is one column.
+     Flex rather than a column grid: a ladder of three, or one with a longer
+     label than "Early bird", wraps onto another line instead of being squeezed
+     into equal tracks. */
+  .cr-price { display: flex; flex-wrap: wrap; text-align: left; gap: 6px 14px; }
   .cr-book { justify-content: center; }
 }
 

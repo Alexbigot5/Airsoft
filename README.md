@@ -263,6 +263,11 @@ up on the roster for staff to resolve.
   "CR" tile alone if it does not, so a missing or renamed logo costs the nav its
   badge and nothing else. The footer keeps the tile deliberately — the badge is
   illegible at that size, under a paragraph that already names the field.
+  The file itself is the artwork cropped to its own edges and scaled to 320px
+  tall: it is transparent, so any margin baked into it would show up as the
+  badge rendering smaller than the 60px of nav it is given, and it loads on
+  every page, so the original 1024px, 1.7 MB export would have been the
+  heaviest asset on the site by three times over.
 - **The Woodland field is 3.5 acres.** The export's card said 40. `FIELD_SIZE`
   in `public/site-enhance.js` is where it is set, matched against the chip's
   original text — reword that chip in the export and the export's number comes

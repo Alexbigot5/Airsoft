@@ -233,10 +233,11 @@
    tile intact when it has not. */
 .brand .cr-brand-mark {
   width: auto;
-  /* .navrow is a fixed 74px, so this is as tall as the badge can be and still
-     have air above and below it. It needs the height: the badge carries its own
-     lettering, which is unreadable at the 40px the "CR" tile occupied. */
-  height: 54px;
+  /* The badge carries its own lettering, and "COYOTE RIDGE AIRSOFT" only starts
+     to read at about this size -- at the 40px the "CR" tile occupied it is a
+     smudge. .navrow is a fixed 74px, so this is close to the ceiling: it leaves
+     7px of air above and below. */
+  height: 60px;
   background: none;
   clip-path: none;
 }

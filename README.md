@@ -7,8 +7,8 @@ The site itself (`public/index.html`) is a bundled export and is treated
 as **read-only** — the Worker serves it and injects two scripts and a stylesheet
 that carry every change made to it since: the real game-day schedule, the map,
 the Instagram and Discord links, the waiver call-to-action, the home-page
-gallery, a mobile menu, the field's real contact details, and the removal of its
-mock Book page.
+gallery, the logo in the nav, a mobile menu, the field's real contact details,
+and the removal of its mock Book page.
 Everything under `src/`, `public/` and `migrations/` is the part you maintain.
 
 ## What it does
@@ -45,7 +45,7 @@ public/
   index.html                the marketing page (read-only, never edited)
   site-hook.js              injected into it to redirect the mock "Book" buttons
   site-enhance.js/.css      injected too: schedule, map, gallery, waiver, nav
-  img/                      the home-page gallery photographs
+  img/                      the home-page gallery photographs, and logo.png
   register / waiver / success / admin pages, app.css
 test/api.spec.ts            the rules that cost money or create liability
 ```
@@ -256,6 +256,17 @@ up on the roster for staff to resolve.
   live in `public/img/`. Exactly one entry is `wide: true`, which is what makes
   seven photos fill the four-column grid to the edge — adding or removing one
   means re-checking that.
+- **The nav shows the field's badge.** It replaces the export's "CR" tile, and
+  it is the one file this repo expects to be there and does not ship a fallback
+  for in code: `LOGO_SRC` in `public/site-enhance.js` points at
+  `public/img/logo.png`. The swap waits for that file to load and leaves the
+  "CR" tile alone if it does not, so a missing or renamed logo costs the nav its
+  badge and nothing else. The footer keeps the tile deliberately — the badge is
+  illegible at that size, under a paragraph that already names the field.
+- **The Woodland field is 3.5 acres.** The export's card said 40. `FIELD_SIZE`
+  in `public/site-enhance.js` is where it is set, matched against the chip's
+  original text — reword that chip in the export and the export's number comes
+  back.
 - **The export invented the field's contact details.** It wrote the real phone
   number and email into the link *text* on the Contact page but left its own
   stand-ins in the `href`s, so the page read correctly and dialled a 612 number

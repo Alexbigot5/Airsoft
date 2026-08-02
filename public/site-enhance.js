@@ -7,12 +7,14 @@
  *   - the liability waiver call-to-action on the Games page
  *   - the real game-day schedule, replacing the export's sample games
  *   - a photo gallery on the home page, in place of the invented game modes
+ *   - the field's badge in the nav, in place of the export's "CR" tile
  *   - a working navigation menu on phones
  *   - copy with no em dashes in it, the bundle's own included
  *
  * It also corrects what the export made up: the field's phone number, address
- * and email, its "open Sat + Sun" status, and the footer's stand-in operator
- * name. Anything the export invented and this file does not replace is a bug.
+ * and email, its "open Sat + Sun" status, its 40-acre Woodland field, and the
+ * footer's stand-in operator name. Anything the export invented and this file
+ * does not replace is a bug.
  *
  * It also takes things away: the Book page, whose booking form was a mock; the
  * per-game player counts, which were sample numbers with nothing behind them;
@@ -54,6 +56,16 @@
   var FOOTER_LEGAL = '© 2026 Coyote Ridge Airsoft';
 
   /**
+   * The field's badge, shown in the nav in place of the export's "CR" tile.
+   *
+   * Served straight from Workers Assets like the gallery photographs. It is not
+   * assumed to be there: the swap below waits for the file to load and leaves
+   * the "CR" tile alone if it does not, so a missing or misnamed file costs the
+   * nav its logo rather than its brand.
+   */
+  var LOGO_SRC = '/img/logo.png';
+
+  /**
    * The waiver every player signs. This used to be `/waiver`, the in-house page
    * backed by `POST /api/waiver/sign`; the field collects signatures on a Google
    * Form instead, so every waiver link on the marketing page points there.
@@ -83,6 +95,18 @@
 
   /** The export's hero coordinates are in Minnesota. These are not coordinates. */
   var HERO_EYEBROW = 'Eugene, Oregon · Outdoor woodland field';
+
+  /**
+   * The size chip on the Woodland card, under "The battleground" on the home
+   * page. The export sized its invented field at 40 acres; Coyote Ridge is 3.5.
+   *
+   * Matched on the chip's text rather than its position, so the type chip beside
+   * it can never be overwritten by mistake -- and, like every other match on the
+   * bundle's own copy here, reword it in the export and the export's number
+   * comes back.
+   */
+  var BUNDLE_FIELD_SIZE = '40 acres';
+  var FIELD_SIZE = '3.5 ACRES';
 
   /**
    * The game days, and the only place to edit them. Each `url` is that day's
@@ -395,7 +419,7 @@
   }
 
   // -------------------------------------------------------------------------
-  // Home page: the hero's status chips, and the gallery
+  // Home page: the hero's status chips, the field size, and the gallery
   // -------------------------------------------------------------------------
 
   /** The hero exists on the home page and nowhere else. */
@@ -420,6 +444,22 @@
     var chips = status.parentElement ? status.parentElement.querySelectorAll('.chip') : [];
     for (var i = 0; i < chips.length; i++) {
       setClass(chips[i], 'cr-hidden', chips[i] !== status);
+    }
+  }
+
+  /**
+   * The acreage on the Woodland field card.
+   *
+   * Idempotent by construction rather than by a guard: once the chip reads
+   * FIELD_SIZE it no longer matches BUNDLE_FIELD_SIZE, so a re-render is what
+   * gives this anything to do.
+   */
+  function fixFieldSize() {
+    var chips = document.querySelectorAll('.fieldcard .chip');
+    for (var i = 0; i < chips.length; i++) {
+      if (normalise(chips[i].textContent) === BUNDLE_FIELD_SIZE) {
+        setText(chips[i], FIELD_SIZE);
+      }
     }
   }
 
@@ -987,6 +1027,55 @@
     close.focus();
   }
 
+  // -------------------------------------------------------------------------
+  // The nav's brand mark
+  // -------------------------------------------------------------------------
+
+  /**
+   * Whether LOGO_SRC actually exists, decided once by loading it off-document.
+   *
+   * The check is what makes the swap safe to ship: the export's "CR" tile stays
+   * put until the badge is known to load, so the nav can never show a broken
+   * image. It is deliberately not an `onerror` on the element in the page --
+   * nothing here binds listeners to nodes the bundle may clone (see the top of
+   * the file), and an `Image` that is never appended is not one of those nodes.
+   */
+  var logoReady = false;
+
+  (function loadLogo() {
+    var probe = new Image();
+    probe.onload = function () {
+      logoReady = true;
+      schedule(); // hoisted; by the time this fires, apply() has run at least once
+    };
+    probe.src = LOGO_SRC;
+  })();
+
+  /**
+   * Puts the badge in the nav, in place of the "CR" tile the export drew with a
+   * background colour and a clip path (both dropped by .cr-brand-mark).
+   *
+   * The footer carries the same tile and keeps it: at that size, under the
+   * paragraph that already names the field, the badge would be illegible.
+   *
+   * The image is decorative -- `.brandtx` beside it says "Coyote Ridge" to a
+   * screen reader already -- so its alt is empty rather than a second copy of
+   * the name.
+   */
+  function enhanceBrandMark() {
+    if (!logoReady) return;
+
+    var mark = document.querySelector('.navrow .brand .mark');
+    if (!mark || mark.querySelector('.cr-brand-logo')) return;
+
+    var logo = el('img', 'cr-brand-logo');
+    logo.src = LOGO_SRC;
+    logo.alt = '';
+    mark.textContent = '';
+    mark.appendChild(logo);
+    setClass(mark, 'cr-brand-mark', true);
+  }
+
   function enhanceNav() {
     var row = document.querySelector('.navrow');
     if (!row || row.querySelector('.cr-menu-btn')) return;
@@ -1054,8 +1143,10 @@
       hideRemovedFaqs();
       hideSafetyBrief();
       enhanceNav();
+      enhanceBrandMark();
       enhanceFooter();
       enhanceHero();
+      fixFieldSize();
       enhanceHomeGallery();
       enhanceContact();
       enhanceSchedules();

@@ -222,6 +222,32 @@
 }
 
 /* ---------------------------------------------------------------------------
+   The nav's brand mark
+   ---------------------------------------------------------------------------
+
+   The bundle's .mark is a 40px orange square with a clip-corner and the letters
+   "CR" in it. With the field's badge inside it, all three of those are in the
+   way: the badge brings its own colour and its own silhouette, and it is wider
+   than it is tall, so the fixed square would crop it. Applied only when the
+   badge has actually loaded (see enhanceBrandMark), which is what keeps the
+   tile intact when it has not. */
+.brand .cr-brand-mark {
+  width: auto;
+  /* .navrow is a fixed 74px, so this is as tall as the badge can be and still
+     have air above and below it. It needs the height: the badge carries its own
+     lettering, which is unreadable at the 40px the "CR" tile occupied. */
+  height: 54px;
+  background: none;
+  clip-path: none;
+}
+
+.cr-brand-logo {
+  display: block;
+  height: 100%;
+  width: auto;
+}
+
+/* ---------------------------------------------------------------------------
    Mobile navigation
    --------------------------------------------------------------------------- */
 

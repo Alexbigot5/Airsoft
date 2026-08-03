@@ -119,6 +119,17 @@
    *
    * No blurb either: every game day ran the same one sentence under its title,
    * which said nothing the chips and the schedule intro do not already say.
+   *
+   * Two fields are optional and exist for the days an open play row cannot
+   * describe on its own:
+   *
+   *   `chips`   extra chips beside the time, for what a title cannot carry
+   *             (night games, camping). Omit it and the row shows the time and
+   *             "Everyone welcome", the same as every other day.
+   *   `pricing` this day's prices in place of PRICING below. Only set it when
+   *             the day really is priced differently -- an open play day left
+   *             with its own copy of the standard prices is a second place to
+   *             forget when they change.
    */
   var EVENTS = [
     {
@@ -137,8 +148,23 @@
       time: '9:00 AM – 4:00 PM',
       url: 'https://form.jotform.com/261835114941153',
     },
+    {
+      mon: 'SEP',
+      dd: '18–19',
+      day: 'FRI–SAT',
+      title: 'End of Summer Camp Out',
+      time: 'Fri 3:00 PM – Sat 4:00 PM',
+      chips: ['Night games', 'Camping included'],
+      pricing: [
+        { label: 'Both days, until 8/31', value: '$40' },
+        { label: 'Both days, after 8/31', value: '$50' },
+        { label: 'Saturday only', value: '$30' },
+      ],
+      url: 'https://form.jotform.com/262077660532154',
+    },
   ];
 
+  /** The open play prices, used by every game day that does not set its own. */
   var PRICING = [
     { label: 'Early bird', value: '$30' },
     { label: 'Registration', value: '$35' },
@@ -203,9 +229,13 @@
     'Every photo here is from a Coyote Ridge game day: the terrain, the ' +
     'structures and the players who show up for them.';
 
+  /* The gates line is qualified because the camp out does not keep it: its
+     Friday gate opens 90 minutes before first call and its Saturday gate two
+     and a half hours before, both of which are on the event's own form. */
   var SCHEDULE_INTRO =
-    'Two open play events, and everyone is welcome. Games run rain or shine. Gates ' +
-    'open 60 minutes before first call for chrono and the safety brief.';
+    'Two open play days and a two-day camp out, and everyone is welcome. Games run ' +
+    'rain or shine. On open play days gates open 60 minutes before first call for ' +
+    'chrono and the safety brief.';
 
   var SCHEDULE_DISCLAIMER = 'Dates subject to change due to weather or field conditions.';
 
@@ -656,13 +686,18 @@
     var chips = el('div', 'cr-chips');
     chips.appendChild(el('span', 'chip chip-o', game.time));
     chips.appendChild(el('span', 'chip', 'Everyone welcome'));
+    var extra = game.chips || [];
+    for (var c = 0; c < extra.length; c++) {
+      chips.appendChild(el('span', 'chip', extra[c]));
+    }
     body.appendChild(chips);
     body.appendChild(el('h3', 'cond cr-event-title', game.title));
     row.appendChild(body);
 
     var price = el('div', 'cr-price');
-    for (var i = 0; i < PRICING.length; i++) {
-      price.appendChild(el('div', 'tag', PRICING[i].value + ' ' + PRICING[i].label));
+    var prices = game.pricing || PRICING;
+    for (var i = 0; i < prices.length; i++) {
+      price.appendChild(el('div', 'tag', prices[i].value + ' ' + prices[i].label));
     }
     row.appendChild(price);
 

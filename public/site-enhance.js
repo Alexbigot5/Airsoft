@@ -197,7 +197,7 @@
   var GALLERY = [
     {
       src: '/img/staging-area.jpg',
-      alt: 'Two players in helmets and plate carriers at the staging area before a game',
+      alt: 'The whole group posed together by the netting at the end of a game day',
       wide: true,
     },
     {

@@ -7,6 +7,7 @@
  *   - the liability waiver call-to-action on the Games page
  *   - the real game-day schedule, replacing the export's sample games
  *   - a photo gallery on the home page, in place of the invented game modes
+ *   - the field's own photographs on the About page, in place of the stock ones
  *   - the field's badge in the nav and the footer, in place of the export's
  *     "CR" tiles
  *   - a working navigation menu on phones
@@ -222,6 +223,44 @@
     {
       src: '/img/structure-overwatch.jpg',
       alt: "A player on overwatch beside one of the field's wooden structures",
+    },
+  ];
+
+  /**
+   * The About page's photographs, and the only place to edit them. Files live in
+   * `public/img/` alongside the home page gallery's and are served the same way.
+   *
+   * The export shipped seven stock photographs on that page: one filling the
+   * card beside "Built by players, for players", and six in the "On the field"
+   * grid. These are the field's own, so the page shows the place a visitor is
+   * reading about rather than a stand-in for it.
+   *
+   * ABOUT_CARD is the tall card beside the opening copy. The lineup is the right
+   * photo for a section about who plays here, which is why it appears again as
+   * the first cell of the grid below -- the export reused a photo across the two
+   * the same way.
+   */
+  var ABOUT_CARD = {
+    src: '/img/team-lineup.jpg',
+    alt: 'Players lined up in the trees at the start of a game day',
+  };
+
+  /**
+   * The "On the field" grid. The bundle draws six cells; the first spans two
+   * columns and two rows and the rest are single, so three photographs fill it
+   * to a clean 3x2 block and the cells past the third are hidden. Adding a
+   * fourth photo means re-checking that: it lands beside the wide cell and
+   * leaves the row under it short.
+   */
+  var ABOUT_GALLERY = [
+    {
+      src: '/img/barricade-push.jpg',
+      alt: 'Two players advancing past the wooden barricades on the hillside',
+    },
+    ABOUT_CARD,
+    {
+      src: '/img/staging-break.jpg',
+      alt: 'Players regrouping by the netting between games',
     },
   ];
 
@@ -539,6 +578,50 @@
       gallery.appendChild(cell);
     }
     wrap.appendChild(gallery);
+  }
+
+  // -------------------------------------------------------------------------
+  // About page: the field's own photographs
+  // -------------------------------------------------------------------------
+
+  /**
+   * Points the About page's images at the photographs in ABOUT_CARD and
+   * ABOUT_GALLERY.
+   *
+   * The `src` values in the bundle are the export's own asset ids, resolved by
+   * its loader. This rewrites that attribute rather than replacing the image:
+   * a node put in from here is one React can drop on the next render, and
+   * setAttr() writes only when the value would actually change, which is what
+   * keeps a re-render from waking the observer that scheduled it.
+   *
+   * The grid is the only .gallgrid the bundle draws and it belongs to the About
+   * page, which is what scopes this to it. The card beside the opening copy is
+   * the one .fieldcard with nothing over its photograph -- the home page's are
+   * the same class with a .fc-body of copy inside.
+   */
+  function enhanceAboutPhotos() {
+    var grid = document.querySelector('.gallgrid');
+    if (!grid) return; // not the About page
+
+    var cells = grid.querySelectorAll('.gallcell');
+    for (var i = 0; i < cells.length; i++) {
+      var photo = ABOUT_GALLERY[i];
+      // Hidden rather than removed, like the sample game rows and the mode
+      // cards: React owns these cells and puts back anything deleted.
+      setClass(cells[i], 'cr-hidden', !photo);
+      if (photo) setPhoto(cells[i].querySelector('img'), photo);
+    }
+
+    var cards = document.querySelectorAll('.fieldcard');
+    for (var j = 0; j < cards.length; j++) {
+      if (cards[j].querySelector('.fc-body')) continue;
+      setPhoto(cards[j].querySelector('img'), ABOUT_CARD);
+    }
+  }
+
+  function setPhoto(img, photo) {
+    setAttr(img, 'src', photo.src);
+    setAttr(img, 'alt', photo.alt);
   }
 
   // -------------------------------------------------------------------------
@@ -1191,6 +1274,7 @@
       enhanceHero();
       fixFieldSize();
       enhanceHomeGallery();
+      enhanceAboutPhotos();
       enhanceContact();
       enhanceSchedules();
       enhanceGamesPage();

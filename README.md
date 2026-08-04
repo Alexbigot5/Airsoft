@@ -256,6 +256,13 @@ up on the roster for staff to resolve.
   live in `public/img/`. Exactly one entry is `wide: true`, which is what makes
   seven photos fill the four-column grid to the edge — adding or removing one
   means re-checking that.
+- **The About page shows the field's own photographs.** The export shipped seven
+  stock ones there: the card beside the opening copy, and six in the "On the
+  field" grid. `ABOUT_CARD` and `ABOUT_GALLERY` in `public/site-enhance.js` are
+  where they are set, with the files in `public/img/`. The bundle's first grid
+  cell spans two columns and two rows, so three photos fill it to a clean 3×2
+  block and the cells past the third are hidden — a fourth would land beside the
+  wide cell and leave the row under it short.
 - **The nav and the footer show the field's badge.** It replaces the export's
   "CR" tiles, and it is the one file this repo expects to be there and does not
   ship a fallback for in code: `LOGO_SRC` in `public/site-enhance.js` points at

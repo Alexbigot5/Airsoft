@@ -222,15 +222,15 @@
 }
 
 /* ---------------------------------------------------------------------------
-   The nav's brand mark
+   The brand marks, in the nav and the footer
    ---------------------------------------------------------------------------
 
    The bundle's .mark is a 40px orange square with a clip-corner and the letters
-   "CR" in it. With the field's badge inside it, all three of those are in the
-   way: the badge brings its own colour and its own silhouette, and it is wider
-   than it is tall, so the fixed square would crop it. Applied only when the
-   badge has actually loaded (see enhanceBrandMark), which is what keeps the
-   tile intact when it has not. */
+   "CR" in it, drawn once in the nav and again in the footer. With the field's
+   badge inside it, all three of those are in the way: the badge brings its own
+   colour and its own silhouette, and it is wider than it is tall, so the fixed
+   square would crop it. Applied only when the badge has actually loaded (see
+   enhanceBrandMark), which is what keeps the tiles intact when it has not. */
 .brand .cr-brand-mark {
   width: auto;
   /* .navrow is a fixed 74px, so this is as tall as the badge can be and still
@@ -239,6 +239,13 @@
   height: 54px;
   background: none;
   clip-path: none;
+}
+
+/* The footer's brand opens a column rather than sitting in a fixed-height row,
+   so nothing caps the badge there and it can carry its own lettering at a size
+   that reads. */
+.footer .brand .cr-brand-mark {
+  height: 76px;
 }
 
 .cr-brand-logo {

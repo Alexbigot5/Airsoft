@@ -256,13 +256,14 @@ up on the roster for staff to resolve.
   live in `public/img/`. Exactly one entry is `wide: true`, which is what makes
   seven photos fill the four-column grid to the edge — adding or removing one
   means re-checking that.
-- **The nav shows the field's badge.** It replaces the export's "CR" tile, and
-  it is the one file this repo expects to be there and does not ship a fallback
-  for in code: `LOGO_SRC` in `public/site-enhance.js` points at
+- **The nav and the footer show the field's badge.** It replaces the export's
+  "CR" tiles, and it is the one file this repo expects to be there and does not
+  ship a fallback for in code: `LOGO_SRC` in `public/site-enhance.js` points at
   `public/img/logo.png`. The swap waits for that file to load and leaves the
-  "CR" tile alone if it does not, so a missing or renamed logo costs the nav its
-  badge and nothing else. The footer keeps the tile deliberately — the badge is
-  illegible at that size, under a paragraph that already names the field.
+  "CR" tiles alone if it does not, so a missing or renamed logo costs the page
+  its badge and nothing else. Both marks are the same tile in the bundle and are
+  sized apart in `site-enhance.css`: the nav's is capped by the 74px row, the
+  footer's is not.
 - **The Woodland field is 3.5 acres.** The export's card said 40. `FIELD_SIZE`
   in `public/site-enhance.js` is where it is set, matched against the chip's
   original text — reword that chip in the export and the export's number comes

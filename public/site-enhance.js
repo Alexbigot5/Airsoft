@@ -7,7 +7,8 @@
  *   - the liability waiver call-to-action on the Games page
  *   - the real game-day schedule, replacing the export's sample games
  *   - a photo gallery on the home page, in place of the invented game modes
- *   - the field's badge in the nav, in place of the export's "CR" tile
+ *   - the field's badge in the nav and the footer, in place of the export's
+ *     "CR" tiles
  *   - a working navigation menu on phones
  *   - copy with no em dashes in it, the bundle's own included
  *
@@ -56,12 +57,13 @@
   var FOOTER_LEGAL = '© 2026 Coyote Ridge Airsoft';
 
   /**
-   * The field's badge, shown in the nav in place of the export's "CR" tile.
+   * The field's badge, shown in the nav and the footer in place of the export's
+   * "CR" tiles.
    *
    * Served straight from Workers Assets like the gallery photographs. It is not
    * assumed to be there: the swap below waits for the file to load and leaves
-   * the "CR" tile alone if it does not, so a missing or misnamed file costs the
-   * nav its logo rather than its brand.
+   * the "CR" tiles alone if it does not, so a missing or misnamed file costs the
+   * page its logo rather than its brand.
    */
   var LOGO_SRC = '/img/logo.png';
 
@@ -1063,14 +1065,14 @@
   }
 
   // -------------------------------------------------------------------------
-  // The nav's brand mark
+  // The brand marks
   // -------------------------------------------------------------------------
 
   /**
    * Whether LOGO_SRC actually exists, decided once by loading it off-document.
    *
-   * The check is what makes the swap safe to ship: the export's "CR" tile stays
-   * put until the badge is known to load, so the nav can never show a broken
+   * The check is what makes the swap safe to ship: the export's "CR" tiles stay
+   * put until the badge is known to load, so the page can never show a broken
    * image. It is deliberately not an `onerror` on the element in the page --
    * nothing here binds listeners to nodes the bundle may clone (see the top of
    * the file), and an `Image` that is never appended is not one of those nodes.
@@ -1087,11 +1089,13 @@
   })();
 
   /**
-   * Puts the badge in the nav, in place of the "CR" tile the export drew with a
-   * background colour and a clip path (both dropped by .cr-brand-mark).
+   * Puts the badge in the nav and the footer, in place of the "CR" tiles the
+   * export drew with a background colour and a clip path (both dropped by
+   * .cr-brand-mark).
    *
-   * The footer carries the same tile and keeps it: at that size, under the
-   * paragraph that already names the field, the badge would be illegible.
+   * Both marks are the same 40px tile in the bundle, so they are swapped by one
+   * selector and sized apart in CSS: the nav's is capped by the 74px row, the
+   * footer's is not.
    *
    * The image is decorative -- `.brandtx` beside it says "Coyote Ridge" to a
    * screen reader already -- so its alt is empty rather than a second copy of
@@ -1100,15 +1104,19 @@
   function enhanceBrandMark() {
     if (!logoReady) return;
 
-    var mark = document.querySelector('.navrow .brand .mark');
-    if (!mark || mark.querySelector('.cr-brand-logo')) return;
+    var marks = document.querySelectorAll('.navrow .brand .mark, .footer .brand .mark');
 
-    var logo = el('img', 'cr-brand-logo');
-    logo.src = LOGO_SRC;
-    logo.alt = '';
-    mark.textContent = '';
-    mark.appendChild(logo);
-    setClass(mark, 'cr-brand-mark', true);
+    for (var i = 0; i < marks.length; i++) {
+      var mark = marks[i];
+      if (mark.querySelector('.cr-brand-logo')) continue;
+
+      var logo = el('img', 'cr-brand-logo');
+      logo.src = LOGO_SRC;
+      logo.alt = '';
+      mark.textContent = '';
+      mark.appendChild(logo);
+      setClass(mark, 'cr-brand-mark', true);
+    }
   }
 
   function enhanceNav() {

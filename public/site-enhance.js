@@ -246,11 +246,15 @@
   };
 
   /**
-   * The "On the field" grid. The bundle draws six cells; the first spans two
-   * columns and two rows and the rest are single, so three photographs fill it
-   * to a clean 3x2 block and the cells past the third are hidden. Adding a
-   * fourth photo means re-checking that: it lands beside the wide cell and
-   * leaves the row under it short.
+   * The "On the field" grid. Three columns, the first cell spanning two of them
+   * and two rows, the rest single. The bundle draws six cells; the photographs
+   * past the sixth get cells of their own from addAboutCells().
+   *
+   * Eight photographs lay out as: the wide cell over rows one and two with two
+   * singles beside it, three across row three, and two on row four -- where the
+   * last spans two columns, which is what keeps that row from ending a column
+   * short. Adding or removing a photo means re-checking that arithmetic, and
+   * the two-column arithmetic in the phone breakpoint in site-enhance.css.
    */
   var ABOUT_GALLERY = [
     {
@@ -261,6 +265,26 @@
     {
       src: '/img/staging-break.jpg',
       alt: 'Players regrouping by the netting between games',
+    },
+    {
+      src: '/img/rain-break.jpg',
+      alt: 'Players sitting out a rain shower together in the grass',
+    },
+    {
+      src: '/img/treeline-standby.jpg',
+      alt: 'A team in armbands waiting in the pines for the game to start',
+    },
+    {
+      src: '/img/prone-corner.jpg',
+      alt: 'A player gone prone at the corner of a wooden wall',
+    },
+    {
+      src: '/img/flag-barricade.jpg',
+      alt: 'A player firing from cover by the flag, tires stacked behind',
+    },
+    {
+      src: '/img/plywood-stack.jpg',
+      alt: 'A player stacked on a plywood wall, waiting to move',
     },
   ];
 
@@ -603,6 +627,8 @@
     var grid = document.querySelector('.gallgrid');
     if (!grid) return; // not the About page
 
+    addAboutCells(grid);
+
     var cells = grid.querySelectorAll('.gallcell');
     for (var i = 0; i < cells.length; i++) {
       var photo = ABOUT_GALLERY[i];
@@ -616,6 +642,28 @@
     for (var j = 0; j < cards.length; j++) {
       if (cards[j].querySelector('.fc-body')) continue;
       setPhoto(cards[j].querySelector('img'), ABOUT_CARD);
+    }
+  }
+
+  /**
+   * Gives the photographs past the bundle's own six cells cells to sit in.
+   *
+   * React puts back one of its own cells if it is deleted, but it has no
+   * opinion about nodes appended after the last of them -- and were a re-render
+   * to drop these, the next pass would append them again. They carry .gallcell
+   * for the grid's own styling and .cr-gallcell so this can tell which cells
+   * are the bundle's and which are ours.
+   *
+   * The last photograph spans two columns; see ABOUT_GALLERY for why.
+   */
+  function addAboutCells(grid) {
+    var mine = grid.querySelectorAll('.cr-gallcell').length;
+    var theirs = grid.querySelectorAll('.gallcell').length - mine;
+    for (var i = theirs + mine; i < ABOUT_GALLERY.length; i++) {
+      var cell = el('div', 'gallcell cr-gallcell');
+      if (i === ABOUT_GALLERY.length - 1) cell.style.gridColumn = 'span 2';
+      cell.appendChild(el('img'));
+      grid.appendChild(cell);
     }
   }
 

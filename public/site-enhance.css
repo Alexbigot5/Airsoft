@@ -94,6 +94,18 @@
 }
 
 /* ---------------------------------------------------------------------------
+   About page gallery
+   ---------------------------------------------------------------------------
+
+   The bundle's own .gallgrid, kept as it is apart from this: its cells are
+   210px of a three-column grid, which crops a photograph taken in portrait to a
+   band across the middle. One cell spans two rows instead, so the tallest photo
+   on the page has somewhere to go. See ABOUT_GALLERY in site-enhance.js, where
+   the spans have to add up to whole rows. */
+
+.gallgrid .cr-about-tall { grid-row: span 2; }
+
+/* ---------------------------------------------------------------------------
    Contact page: Instagram, Discord + directions
    --------------------------------------------------------------------------- */
 

@@ -236,9 +236,10 @@
    * reading about rather than a stand-in for it.
    *
    * ABOUT_CARD is the tall card beside the opening copy. The lineup is the right
-   * photo for a section about who plays here, which is why it appears again as
-   * the first cell of the grid below -- the export reused a photo across the two
-   * the same way.
+   * photo for a section about who plays here, which is why it appears again in
+   * the grid below -- the export reused a photo across the two the same way, and
+   * with eight photographs in an eight-cell grid one of them has to be the one
+   * the card carries.
    */
   var ABOUT_CARD = {
     src: '/img/team-lineup.jpg',
@@ -246,18 +247,48 @@
   };
 
   /**
-   * The "On the field" grid. The bundle draws six cells; the first spans two
-   * columns and two rows and the rest are single, so three photographs fill it
-   * to a clean 3x2 block and the cells past the third are hidden. Adding a
-   * fourth photo means re-checking that: it lands beside the wide cell and
-   * leaves the row under it short.
+   * The "On the field" grid, in the order the cells are filled.
+   *
+   * The grid is three columns of 210px rows. The bundle's first cell spans two
+   * columns and two rows and it draws six of them in all; enhanceAboutPhotos()
+   * adds cells for any entry past the sixth. `tall` spans two rows, which is the
+   * one cell shaped for a photograph taken in portrait.
+   *
+   * The count is not free-form: the spans have to add up to whole rows of three.
+   * The wide cell is four cells' worth and the tall one is two, so these eight
+   * entries come to twelve -- four full rows, no ragged tail. Adding or removing
+   * a photo means re-checking that arithmetic, the same as the home page's.
    */
   var ABOUT_GALLERY = [
+    {
+      src: '/img/flag-barricade.jpg',
+      alt: 'A player kneeling behind a wooden barricade below the flag',
+    },
+    {
+      src: '/img/prone-cover.jpg',
+      alt: 'A player prone behind a plywood wall with a rifle up',
+    },
+    {
+      src: '/img/stacked-wall.jpg',
+      alt: 'A player stacked on a plywood wall, seen from behind',
+    },
+    {
+      src: ABOUT_CARD.src,
+      alt: ABOUT_CARD.alt,
+      tall: true,
+    },
+    {
+      src: '/img/rain-huddle.jpg',
+      alt: 'Players sitting out a rain shower in the grass between games',
+    },
+    {
+      src: '/img/team-armbands.jpg',
+      alt: 'A team waiting in the trees with pink armbands before a game',
+    },
     {
       src: '/img/barricade-push.jpg',
       alt: 'Two players advancing past the wooden barricades on the hillside',
     },
-    ABOUT_CARD,
     {
       src: '/img/staging-break.jpg',
       alt: 'Players regrouping by the netting between games',
@@ -603,13 +634,33 @@
     var grid = document.querySelector('.gallgrid');
     if (!grid) return; // not the About page
 
+    // The bundle draws six cells and ABOUT_GALLERY is longer than that. The
+    // extras are appended rather than the grid rebuilt, so the cells the bundle
+    // owns keep their own spans, and they are re-appended on the pass after a
+    // re-render drops them -- the same deal the home page gallery is on.
     var cells = grid.querySelectorAll('.gallcell');
+    for (var n = cells.length; n < ABOUT_GALLERY.length; n++) {
+      var added = el('div', 'gallcell');
+      added.appendChild(el('img'));
+      grid.appendChild(added);
+    }
+    cells = grid.querySelectorAll('.gallcell');
+
     for (var i = 0; i < cells.length; i++) {
       var photo = ABOUT_GALLERY[i];
       // Hidden rather than removed, like the sample game rows and the mode
       // cards: React owns these cells and puts back anything deleted.
       setClass(cells[i], 'cr-hidden', !photo);
-      if (photo) setPhoto(cells[i].querySelector('img'), photo);
+      setClass(cells[i], 'cr-about-tall', !!(photo && photo.tall));
+      if (!photo) continue;
+
+      var img = cells[i].querySelector('img');
+      setPhoto(img, photo);
+      // The grid is below the fold on every viewport, and eight photographs is
+      // real weight to put in front of the first paint. The card above is not
+      // lazy for the same reason: it is the one image on the page that is not.
+      setAttr(img, 'loading', 'lazy');
+      setAttr(img, 'decoding', 'async');
     }
 
     var cards = document.querySelectorAll('.fieldcard');

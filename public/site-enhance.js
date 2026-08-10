@@ -54,7 +54,7 @@
   var FIELD_ADDRESS = '84562 Territorial Hwy, Eugene, OR';
   var FIELD_PHONE = '541-799-6823';
   var FIELD_PHONE_HREF = 'tel:+15417996823';
-  var FIELD_EMAIL = 'games@coyoteridge.gg';
+  var FIELD_EMAIL = 'coyoteridgeairsoft@gmail.com';
   var FOOTER_LEGAL = '© 2026 Coyote Ridge Airsoft';
 
   /**

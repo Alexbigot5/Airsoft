@@ -196,8 +196,8 @@
    */
   var GALLERY = [
     {
-      src: '/img/staging-area.jpg',
-      alt: 'Two players in helmets and plate carriers at the staging area before a game',
+      src: '/img/game-day-group.jpg',
+      alt: 'Everyone at a game day together for a group photo',
       wide: true,
     },
     {

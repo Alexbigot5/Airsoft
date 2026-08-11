@@ -28,6 +28,9 @@ Everything under `src/`, `public/` and `migrations/` is the part you maintain.
 - **Staff console** — `/admin`, gated by a shared token. Day-of roster, mark
   paid (cash at the gate), check in. **Check-in is refused for anyone without a
   current signed waiver.**
+- **Contact form** — the marketing page's "Send a message" panel. Messages are
+  stored in D1 and emailed to the field, in that order, so a mail outage costs a
+  notification rather than the message.
 
 ## Layout
 
@@ -39,8 +42,9 @@ src/
   index.ts                  router, error shape, HTMLRewriter injection, cron
   db.ts  validate.ts        helpers: ids, hashing, age, field validation
   stripe.ts                 Checkout + webhook verification (fetch, no SDK)
+  mail.ts                   contact-form email via Resend (fetch, no SDK)
   sweeper.ts                releases spots held by abandoned checkouts
-  routes/                   events, bookings, waivers, checkout, admin
+  routes/                   events, bookings, waivers, checkout, contact, admin
 public/
   index.html                the marketing page (read-only, never edited)
   site-hook.js              injected into it to redirect the mock "Book" buttons
@@ -81,6 +85,9 @@ exercises the production path rather than a shortcut around it.
 6. `/waiver` with no token — the standalone waiver. Sign it with an email that
    has no booking, then book with that same email and check in: the signature is
    found by email and entry is allowed.
+7. `/` → Contact → fill in "Send a message" and send. With `RESEND_API_KEY`
+   empty the message is stored and not emailed, which is the point: it is still
+   there at `GET /api/admin/messages`, marked `emailed: false`.
 
 Inspect state directly at any point:
 
@@ -99,7 +106,8 @@ npm run typecheck
 
 The suite covers overselling under concurrent bookings, server-side pricing,
 minors and the age floor, stale waiver text, check-in without or with an expired
-waiver, webhook replay, and the hold sweeper.
+waiver, webhook replay, the hold sweeper, and the contact form — including that
+a message survives a failed send, which is the whole reason it is stored first.
 
 Cron triggers do not fire automatically in local dev. Run the sweeper by hand
 with the button on `/admin`, or:
@@ -155,6 +163,45 @@ A missing `STRIPE_WEBHOOK_SECRET` on a deployment that *has* a Stripe key is
 treated as a misconfiguration and rejected — unsigned events are only accepted
 in the fully unconfigured local mode.
 
+### Contact form email
+
+Messages from the "Send a message" form on the Contact page are **always stored**
+in `contact_messages` and readable at `GET /api/admin/messages`. Emailing them
+on to the field's inbox is the part that needs setting up, and a deployment
+without it loses notifications, not messages.
+
+Workers cannot open an SMTP connection, so mail goes out over an HTTP API —
+[Resend](https://resend.com) here, called from `src/mail.ts` the same way
+`src/stripe.ts` calls Stripe.
+
+```bash
+npx wrangler secret put RESEND_API_KEY
+```
+
+Two vars in `wrangler.jsonc` control the rest:
+
+- `CONTACT_EMAIL` — where messages are delivered. Defaults to
+  `coyoteridgeairsoft@gmail.com` if unset.
+- `CONTACT_FROM` — who they come from. **Resend refuses any sender outside a
+  domain verified on the account**, so this has to change at the same time as
+  verifying one. Verifying a domain means adding the DKIM and SPF records Resend
+  gives you to that domain's DNS. The committed value is
+  `onboarding@resend.dev`, which needs no DNS but only delivers to the address
+  that owns the Resend account — right for testing, wrong for production.
+
+The visitor's address goes in `reply_to`, so hitting Reply in the inbox answers
+them rather than the Worker. Message bodies are sent as plain text and never as
+HTML: a contact form is an open door, and rendering a stranger's message as
+markup in the field's mailbox would hand them working links in front of staff.
+
+If a send fails, the row keeps `emailed = 0` and the reason in `error`, the
+Worker logs it, and the visitor is still told the message was received — because
+it was. Check `GET /api/admin/messages` for anything with `emailed: false`.
+
+Two things keep the endpoint from being a spam relay: a honeypot field that is
+hidden from people and dropped silently when filled, and a per-IP limit of five
+messages in ten minutes.
+
 ## API
 
 Public:
@@ -170,6 +217,7 @@ Public:
 | GET | `/api/waiver/current` | active waiver text and its hash |
 | GET/POST | `/api/waiver/attendee/:token` | read and sign one attendee's waiver |
 | POST | `/api/waiver/sign` | sign the standalone waiver, no booking needed |
+| POST | `/api/contact` | contact form; stores the message, then emails it |
 | POST | `/api/stripe/webhook` | signature-verified, idempotent |
 
 Staff — all require `Authorization: Bearer $ADMIN_TOKEN`:
@@ -185,6 +233,7 @@ Staff — all require `Authorization: Bearer $ADMIN_TOKEN`:
 | POST | `/api/admin/attendees/:id/check-in` | refused without a valid waiver |
 | POST | `/api/admin/attendees/:id/undo-check-in` | |
 | GET/POST | `/api/admin/waiver-versions` | publish new wording |
+| GET | `/api/admin/messages` | contact form messages, newest first |
 | POST | `/api/admin/sweep-holds` | run the sweeper now |
 
 Errors are `{ "error": { "code", "message" } }` with a real status code.
@@ -333,7 +382,17 @@ up on the roster for staff to resolve.
   `site-enhance.css` collapses the two-column layouts the export left fixed —
   matched by inline-style attribute, in both the unspaced form the bundle authors
   and the spaced form React re-serializes them to.
-- **No email is sent yet.** Waiver links are shown to the booker on `/success`.
-  Adding Resend or MailChannels later is a small, isolated change.
+- **The contact form used to send nothing anywhere.** The bundle's "Send a
+  message" button was bound to `sendMsg:()=>this.setState({msgSent:true})` — it
+  flipped the label to "Message sent ✓" and stopped there, and the three inputs
+  were bound to no state at all, so what a visitor typed was read by nobody. It
+  now posts to `POST /api/contact`, which stores the message and emails it. The
+  panel is left in the bundle and its click intercepted in the capture phase,
+  the way `site-hook.js` intercepts the mock booking buttons; the values are
+  read straight off the DOM nodes, which works precisely because the bundle
+  ignores them. See "Contact form email" below.
+- **Booking email is still not sent.** Waiver links are shown to the booker on
+  `/success`. `src/mail.ts` is now there to build on, so wiring up a booking
+  confirmation is a smaller change than it was.
 - **Refunds** are initiated in the Stripe dashboard; the `charge.refunded`
   webhook records them and releases the spot if the game has not happened yet.

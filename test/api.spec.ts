@@ -1,5 +1,5 @@
 import { SELF, env } from 'cloudflare:test';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 /**
  * These cover the rules that cost money or create liability if they are wrong:
@@ -577,5 +577,146 @@ describe('admin guards', () => {
       .bind(before)
       .first<{ n: number }>();
     expect(kept?.n).toBe(1);
+  });
+});
+
+describe('contact form', () => {
+  const realFetch = globalThis.fetch;
+
+  /**
+   * Intercepts calls to Resend only, so SELF.fetch and everything else keep
+   * working. `handler` stands in for what Resend would have answered.
+   */
+  function stubResend(handler: (payload: any) => Response) {
+    env.RESEND_API_KEY = 'test-resend-key';
+    vi.stubGlobal('fetch', (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (!url.startsWith('https://api.resend.com')) return realFetch(input as RequestInfo, init);
+      return Promise.resolve(handler(JSON.parse(String(init?.body ?? '{}'))));
+    });
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    delete env.RESEND_API_KEY;
+  });
+
+  let ipSeq = 0;
+  // A fresh address per test: the flood check counts by IP, and tests that are
+  // not about rate limiting must not spend each other's allowance.
+  const freshIp = () => `203.0.113.${++ipSeq % 250}`;
+
+  const send = (body: Record<string, unknown>, ip = freshIp()) =>
+    SELF.fetch('https://x/api/contact', {
+      method: 'POST',
+      headers: { ...JSON_HEADERS, 'CF-Connecting-IP': ip },
+      body: JSON.stringify(body),
+    });
+
+  const message = (extra: Record<string, unknown> = {}) => ({
+    name: 'Casey Player',
+    email: `c${crypto.randomUUID().slice(0, 8)}@example.com`,
+    message: 'Do you take group bookings for eight people?',
+    ...extra,
+  });
+
+  const stored = (email: string) =>
+    env.DB.prepare(
+      `SELECT name, email, message, emailed, error FROM contact_messages WHERE email = ?1`,
+    )
+      .bind(email)
+      .first<{ name: string; email: string; message: string; emailed: number; error: string | null }>();
+
+  it('stores the message and emails it', async () => {
+    let sent: any;
+    stubResend((payload) => {
+      sent = payload;
+      return new Response(JSON.stringify({ id: 'msg_1' }), { status: 200 });
+    });
+
+    const body = message();
+    const res = await send(body);
+    expect(res.status).toBe(200);
+
+    const row = await stored(body.email);
+    expect(row?.message).toBe(body.message);
+    expect(row?.emailed).toBe(1);
+    expect(row?.error).toBeNull();
+
+    // The address the form is for, and the reply path back to the sender.
+    expect(sent.to).toEqual(['coyoteridgeairsoft@gmail.com']);
+    expect(sent.reply_to).toBe(body.email);
+    expect(sent.text).toContain(body.message);
+  });
+
+  it('keeps the message when the email fails to send', async () => {
+    stubResend(() => new Response('domain not verified', { status: 403 }));
+
+    const body = message();
+    const res = await send(body);
+
+    // The sender is told it worked, because from their side it did: the
+    // message is on disk and staff can read it at /api/admin/messages.
+    expect(res.status).toBe(200);
+
+    const row = await stored(body.email);
+    expect(row?.emailed).toBe(0);
+    expect(row?.error).toContain('resend_403');
+  });
+
+  it('stores the message when no mail transport is configured', async () => {
+    const body = message();
+    expect((await send(body)).status).toBe(200);
+
+    const row = await stored(body.email);
+    expect(row?.emailed).toBe(0);
+    expect(row?.error).toBe('not_configured');
+  });
+
+  it('rejects an empty message and a malformed address', async () => {
+    const blank = await send(message({ message: '   ' }));
+    expect(blank.status).toBe(400);
+    expect(((await blank.json()) as any).error.code).toBe('missing_field');
+
+    const bad = await send(message({ email: 'not-an-address' }));
+    expect(bad.status).toBe(400);
+    expect(((await bad.json()) as any).error.code).toBe('invalid_email');
+  });
+
+  it('silently drops a submission that filled in the honeypot', async () => {
+    const body = message({ company: 'Acme Widgets' });
+    const res = await send(body);
+
+    // Success shape, so a bot learns nothing about why it failed...
+    expect(res.status).toBe(200);
+    // ...and nothing is stored.
+    expect(await stored(body.email)).toBeNull();
+  });
+
+  it('rate limits one address after five messages', async () => {
+    const ip = '198.51.100.7';
+    for (let i = 0; i < 5; i++) {
+      expect((await send(message(), ip)).status).toBe(200);
+    }
+
+    const sixth = await send(message(), ip);
+    expect(sixth.status).toBe(429);
+    expect(((await sixth.json()) as any).error.code).toBe('too_many_messages');
+  });
+
+  it('serves stored messages to staff and nobody else', async () => {
+    const body = message();
+    await send(body);
+
+    const denied = await SELF.fetch('https://x/api/admin/messages');
+    expect(denied.status).toBe(401);
+
+    const res = await SELF.fetch('https://x/api/admin/messages', { headers: ADMIN });
+    expect(res.status).toBe(200);
+
+    const { messages } = (await res.json()) as any;
+    const mine = messages.find((m: any) => m.email === body.email);
+    expect(mine.message).toBe(body.message);
+    expect(mine.emailed).toBe(false);
   });
 });

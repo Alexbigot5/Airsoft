@@ -6,11 +6,14 @@ export interface Env {
   PUBLIC_BASE_URL: string;
   WAIVER_VALID_DAYS: string;
   HOLD_MINUTES: string;
+  CONTACT_EMAIL?: string;
+  CONTACT_FROM?: string;
 
   // secrets (wrangler secret put / .dev.vars)
   ADMIN_TOKEN?: string;
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
+  RESEND_API_KEY?: string;
 }
 
 export type AppBindings = { Bindings: Env };
@@ -75,6 +78,17 @@ export interface AttendeeRow {
   waiver_id: number | null;
   checked_in_at: string | null;
   chrono_ok: number;
+}
+
+export interface ContactMessageRow {
+  id: number;
+  name: string;
+  email: string;
+  message: string;
+  ip: string | null;
+  emailed: number;
+  error: string | null;
+  created_at: string;
 }
 
 export interface WaiverVersionRow {

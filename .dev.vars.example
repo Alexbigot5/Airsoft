@@ -8,3 +8,8 @@ ADMIN_TOKEN="dev-admin-token"
 # Set both to real test-mode values to rehearse against Stripe.
 STRIPE_SECRET_KEY=""
 STRIPE_WEBHOOK_SECRET=""
+
+# Contact form email, via Resend (https://resend.com). Leave empty to store
+# messages without sending: the form still works and every message is readable
+# at GET /api/admin/messages, it just does not land in the field's inbox.
+RESEND_API_KEY=""

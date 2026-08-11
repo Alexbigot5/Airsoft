@@ -5,6 +5,7 @@ import { events } from './routes/events';
 import { bookings } from './routes/bookings';
 import { waivers } from './routes/waivers';
 import { checkout } from './routes/checkout';
+import { contact } from './routes/contact';
 import { admin } from './routes/admin';
 import { sweepExpiredHolds } from './sweeper';
 
@@ -31,6 +32,7 @@ app.route('/api', events);
 app.route('/api', bookings);
 app.route('/api', waivers);
 app.route('/api', checkout);
+app.route('/api', contact);
 app.route('/api/admin', admin);
 
 // The bundled page is also reachable by its own filename; send it to "/" so

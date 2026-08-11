@@ -19,6 +19,10 @@ export default defineConfig(async () => {
           bindings: {
             TEST_MIGRATIONS: migrations,
             ADMIN_TOKEN: 'test-staff-token',
+            // Pinned empty so the suite starts from "no mail transport"
+            // whatever a developer happens to have in .dev.vars. The contact
+            // tests that need a working one set it themselves.
+            RESEND_API_KEY: '',
           },
         },
       }),

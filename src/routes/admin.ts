@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import type { AppBindings, BookingRow, EventRow } from '../types';
+import type { AppBindings, BookingRow, ContactMessageRow, EventRow } from '../types';
 import {
   ApiError,
   optionalString,
@@ -520,6 +520,37 @@ admin.post('/waiver-versions', async (c) => {
   ]);
 
   return c.json({ version, sha256: hash, active: true }, 201);
+});
+
+// ---------------------------------------------------------------------------
+// Contact form
+// ---------------------------------------------------------------------------
+
+/**
+ * Everything the "Send a message" form has collected.
+ *
+ * This is what makes a failed notification recoverable rather than silent: a
+ * message with `emailed: false` never reached the inbox, and `error` says why.
+ */
+admin.get('/messages', async (c) => {
+  const { results } = await c.env.DB.prepare(
+    `SELECT id, name, email, message, emailed, error, created_at
+       FROM contact_messages
+      ORDER BY created_at DESC, id DESC
+      LIMIT 200`,
+  ).all<ContactMessageRow>();
+
+  return c.json({
+    messages: results.map((m) => ({
+      id: m.id,
+      name: m.name,
+      email: m.email,
+      message: m.message,
+      emailed: Boolean(m.emailed),
+      error: m.error,
+      createdAt: m.created_at,
+    })),
+  });
 });
 
 // ---------------------------------------------------------------------------

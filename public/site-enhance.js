@@ -764,6 +764,168 @@
   }
 
   // -------------------------------------------------------------------------
+  // Contact page: the "Send a message" form
+  // -------------------------------------------------------------------------
+
+  /**
+   * The bundle ships this form as decoration. Its button is bound to
+   *
+   *     sendMsg:()=>this.setState({msgSent:true})
+   *
+   * which flips the label to "Message sent ✓" and does nothing else -- no
+   * request, no recipient. The three inputs are not bound to any state either,
+   * so what a visitor typed was read by nobody and went nowhere.
+   *
+   * The panel is left where it is and its click intercepted in the capture
+   * phase, the way site-hook.js intercepts the bundle's mock booking buttons.
+   * The values are read straight off the DOM nodes, which works precisely
+   * because the bundle ignores them: nothing re-renders over what was typed.
+   */
+  var CONTACT_ENDPOINT = '/api/contact';
+  var MESSAGE_PANEL_FLAG = 'data-cr-message-form';
+  var MESSAGE_TAG = '// send a message';
+
+  function messagePanel() {
+    var tags = document.querySelectorAll('.panel .tag');
+    for (var i = 0; i < tags.length; i++) {
+      if (normalise(tags[i].textContent) === MESSAGE_TAG) {
+        return tags[i].closest('.panel');
+      }
+    }
+    return null;
+  }
+
+  /** The panel's parts, re-read each time: React may have rebuilt all of them. */
+  function messageFields(panel) {
+    var inputs = panel.querySelectorAll('input.input');
+    return {
+      name: inputs[0] || null,
+      email: inputs[1] || null,
+      message: panel.querySelector('textarea.input'),
+      button: panel.querySelector('button'),
+      honeypot: panel.querySelector('.cr-hp'),
+      status: panel.querySelector('.cr-msg-status'),
+    };
+  }
+
+  /**
+   * `kind` is 'ok', 'invalid' for something the sender can fix themselves, or
+   * 'error' for a failure on our side -- which also offers the mailto: address,
+   * because that route works even when this one does not.
+   */
+  function setMessageStatus(fields, text, kind) {
+    var node = fields.status;
+    if (!node) return;
+
+    node.textContent = text || '';
+    setClass(node, 'cr-msg-error', kind === 'invalid' || kind === 'error');
+    setClass(node, 'cr-hidden', !text);
+
+    if (kind === 'error') {
+      node.appendChild(document.createTextNode(' You can also email us at '));
+      var mail = el('a', null, FIELD_EMAIL);
+      mail.href = 'mailto:' + FIELD_EMAIL;
+      node.appendChild(mail);
+      node.appendChild(document.createTextNode('.'));
+    }
+  }
+
+  /** Matches the server's deliberately permissive check in src/validate.ts. */
+  function looksLikeEmail(value) {
+    return /^[^\s@,;]+@[^\s@,;.]+(\.[^\s@,;.]+)+$/.test(value);
+  }
+
+  function readValue(node) {
+    return node && node.value ? node.value.trim() : '';
+  }
+
+  function sendMessage(panel) {
+    var fields = messageFields(panel);
+    if (!fields.button || fields.button.disabled) return;
+
+    var payload = {
+      name: readValue(fields.name),
+      email: readValue(fields.email),
+      message: readValue(fields.message),
+      company: fields.honeypot ? fields.honeypot.value : '',
+    };
+
+    if (!payload.name || !payload.email || !payload.message) {
+      setMessageStatus(fields, 'Please fill in your name, email and message.', 'invalid');
+      return;
+    }
+    if (!looksLikeEmail(payload.email)) {
+      setMessageStatus(fields, 'That does not look like an email address.', 'invalid');
+      return;
+    }
+
+    var label = fields.button.textContent;
+    fields.button.disabled = true;
+    fields.button.textContent = 'Sending…';
+    setMessageStatus(fields, '');
+
+    fetch(CONTACT_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then(function (res) {
+        return res
+          .json()
+          .catch(function () {
+            return {};
+          })
+          .then(function (body) {
+            if (!res.ok) {
+              throw new Error((body.error && body.error.message) || 'Your message was not sent.');
+            }
+          });
+      })
+      .then(function () {
+        fields.button.textContent = 'Message sent ✓';
+        if (fields.name) fields.name.value = '';
+        if (fields.email) fields.email.value = '';
+        if (fields.message) fields.message.value = '';
+        // No em dash: rewriteEmDashes() would turn it into this anyway.
+        setMessageStatus(fields, 'Thanks, we will reply to ' + payload.email + '.', 'ok');
+      })
+      .catch(function (err) {
+        // Left enabled and refilled: the message is still in the boxes, so the
+        // sender can just press the button again.
+        fields.button.disabled = false;
+        fields.button.textContent = label;
+        setMessageStatus(fields, (err && err.message) || 'Your message was not sent.', 'error');
+      });
+  }
+
+  function enhanceMessageForm() {
+    var panel = messagePanel();
+    if (!panel || panel.hasAttribute(MESSAGE_PANEL_FLAG)) return;
+
+    var fields = messageFields(panel);
+    // If the bundle's markup ever moves, leave the panel exactly as it was
+    // rather than half-wiring it.
+    if (!fields.button || !fields.message || !fields.name || !fields.email) return;
+
+    panel.setAttribute(MESSAGE_PANEL_FLAG, '1');
+
+    // Hidden from people, filled in by anything that fills in every input it
+    // finds. POST /api/contact drops any message that arrives with it set.
+    var honeypot = el('input', 'cr-hp');
+    honeypot.type = 'text';
+    honeypot.name = 'company';
+    honeypot.tabIndex = -1;
+    honeypot.setAttribute('autocomplete', 'off');
+    honeypot.setAttribute('aria-hidden', 'true');
+    panel.appendChild(honeypot);
+
+    var status = el('div', 'cr-msg-status cr-hidden');
+    status.setAttribute('role', 'status');
+    status.setAttribute('aria-live', 'polite');
+    panel.appendChild(status);
+  }
+
+  // -------------------------------------------------------------------------
   // Games page: the waiver every player has to sign
   // -------------------------------------------------------------------------
 
@@ -1306,6 +1468,44 @@
     if (window.innerWidth > 900) closeMenu();
   });
 
+  /**
+   * The contact form's send button.
+   *
+   * Bound once on the document rather than on the button, because React
+   * replaces that button on every re-render and a per-node listener would go
+   * with it. Capture phase, so this runs before the bundle's own handler and
+   * can stop it: `sendMsg` would report "Message sent ✓" over a message nobody
+   * had sent, and its setState would re-render the panel out from under the
+   * request that is actually sending it.
+   *
+   * site-hook.js has a capture listener on the same event, and runs first; the
+   * labels this button carries ("Send message", "Sending…", "Message sent ✓")
+   * are none of its BOOKING_LABELS, so the two never both act.
+   */
+  document.addEventListener(
+    'click',
+    function (event) {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey) return;
+
+      var target = event.target;
+      var button = target && target.closest ? target.closest('button') : null;
+      if (!button) return;
+
+      var panel = button.closest('.panel[' + MESSAGE_PANEL_FLAG + ']');
+      if (!panel || button !== messageFields(panel).button) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      try {
+        sendMessage(panel);
+      } catch (err) {
+        console.warn('[site-enhance]', err);
+      }
+    },
+    true,
+  );
+
   // -------------------------------------------------------------------------
   // Apply, and keep applying
   // -------------------------------------------------------------------------
@@ -1327,6 +1527,7 @@
       enhanceHomeGallery();
       enhanceAboutPhotos();
       enhanceContact();
+      enhanceMessageForm();
       enhanceSchedules();
       enhanceGamesPage();
       enhanceGames();

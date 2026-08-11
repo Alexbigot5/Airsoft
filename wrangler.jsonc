@@ -37,7 +37,17 @@
     // domain you want every link to use.
     "PUBLIC_BASE_URL": "",
     "WAIVER_VALID_DAYS": "365",
-    "HOLD_MINUTES": "30"
+    "HOLD_MINUTES": "30",
+
+    // Where the contact form delivers.
+    "CONTACT_EMAIL": "coyoteridgeairsoft@gmail.com",
+
+    // Resend will only send from a domain verified on the account, so this has
+    // to be changed alongside verifying one -- an unverified sender fails every
+    // send. "onboarding@resend.dev" needs no DNS but only delivers to the
+    // address that owns the Resend account, which makes it useful for testing
+    // and wrong for production.
+    "CONTACT_FROM": "Coyote Ridge Airsoft <onboarding@resend.dev>"
   },
 
   "observability": {

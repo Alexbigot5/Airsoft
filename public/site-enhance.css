@@ -124,6 +124,37 @@
 }
 
 /* ---------------------------------------------------------------------------
+   Contact page: the "Send a message" form
+   --------------------------------------------------------------------------- */
+
+/* Honeypot. Hidden from people without `display: none`, which some bots read as
+   "skip this one", and kept out of the tab order and off screen readers by the
+   attributes site-enhance.js sets on it. */
+.cr-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cr-msg-status {
+  margin-top: 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--mut);
+}
+
+.cr-msg-status a {
+  color: inherit;
+}
+
+.cr-msg-error {
+  color: #ff8f6b;
+}
+
+/* ---------------------------------------------------------------------------
    Games page: the waiver call to action
    --------------------------------------------------------------------------- */
 

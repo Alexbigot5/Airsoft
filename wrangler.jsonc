@@ -60,7 +60,7 @@
     // which delivers only to the address that owns the Resend account -- so
     // pointing this at resend.dev while CONTACT_EMAIL is the field's Gmail
     // rejects every message with a 403, which is exactly what it did.
-    "CONTACT_FROM": "Coyote Ridge Airsoft <noreply@coyoteridgeairsoft.com>"
+    "CONTACT_FROM": "Coyote Ridge Airsoft <help@coyoteridgeairsoft.com>"
   },
 
   "observability": {

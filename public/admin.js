@@ -20,6 +20,8 @@
     rosterBody: document.querySelector('#roster tbody'),
     sweep: document.getElementById('sweep'),
     sweepResult: document.getElementById('sweepResult'),
+    messages: document.getElementById('messages'),
+    refreshMessages: document.getElementById('refreshMessages'),
   };
 
   function escapeHtml(s) {
@@ -75,6 +77,9 @@
       el.auth.classList.add('hidden');
       el.app.classList.remove('hidden');
       el.signOut.classList.remove('hidden');
+      // Signed in either way: the roster is the job, the messages are a panel
+      // further down, and one failing to load must not hold the other back.
+      loadMessages().catch(function (err) { showError(err.message); });
     } catch (err) {
       showError(err.message);
     }
@@ -209,6 +214,60 @@
     }
   });
 
+  // -------------------------------------------------------------------------
+  // Contact form messages
+  // -------------------------------------------------------------------------
+
+  /**
+   * The messages panel exists because a stored message that never reached the
+   * inbox is otherwise unreadable: POST /api/contact always writes the row and
+   * only then tries to email it, so a Resend outage, an unverified sender or a
+   * missing RESEND_API_KEY costs the notification and leaves the message itself
+   * sitting in the table with nothing pointing at it. `emailed` and `error` are
+   * shown for the same reason -- staff seeing "Not emailed" on a message is how
+   * anyone finds out that delivery is broken.
+   */
+  async function loadMessages() {
+    var data = await api('/api/admin/messages');
+
+    el.messages.innerHTML = '';
+    if (data.messages.length === 0) {
+      el.messages.innerHTML = '<p class="muted">No messages yet.</p>';
+      return;
+    }
+
+    data.messages.forEach(function (m) {
+      var card = document.createElement('div');
+      card.className = 'panel msg';
+
+      var status = m.emailed
+        ? '<span class="pill good">Emailed</span>'
+        : '<span class="pill bad">Not emailed</span>';
+
+      // The reason is staff-facing plumbing detail ("resend_403: ..."), so it
+      // rides along quietly rather than shouting over the message itself.
+      var why = m.emailed || !m.error
+        ? ''
+        : '<div class="muted small mono">' + escapeHtml(m.error) + '</div>';
+
+      card.innerHTML =
+        '<div class="msg-head">' +
+        '<div><strong>' + escapeHtml(m.name) + '</strong> ' +
+        '<a href="mailto:' + escapeHtml(m.email) + '">' + escapeHtml(m.email) + '</a>' +
+        '<div class="muted small">' + escapeHtml(new Date(m.createdAt).toLocaleString()) + '</div>' +
+        '</div>' + status + '</div>' +
+        '<p class="msg-body">' + escapeHtml(m.message) + '</p>' +
+        why;
+
+      el.messages.appendChild(card);
+    });
+  }
+
+  el.refreshMessages.addEventListener('click', function () {
+    clearError();
+    loadMessages().catch(function (err) { showError(err.message); });
+  });
+
   el.sweep.addEventListener('click', async function () {
     clearError();
     try {
@@ -226,6 +285,7 @@
         el.auth.classList.add('hidden');
         el.app.classList.remove('hidden');
         el.signOut.classList.remove('hidden');
+        return loadMessages().catch(function (err) { showError(err.message); });
       })
       .catch(function () { signOut(); });
   }

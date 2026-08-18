@@ -29,25 +29,38 @@
     "crons": ["*/10 * * * *"]
   },
 
+  // This block is the only place these values should be edited.
+  //
+  // `wrangler deploy` deletes every var on the Worker and re-sets them from
+  // here, so anything typed into the dashboard's "Variables and secrets" panel
+  // survives only until the next deploy and then silently reverts to whatever
+  // is written below. Editing there instead of here is how CONTACT_FROM came to
+  // be one address in production and another in this file, with nothing to say
+  // which one was live. Secrets are exempt -- a deploy never deletes those --
+  // which is why RESEND_API_KEY, ADMIN_TOKEN and the Stripe keys are set with
+  // `wrangler secret put` and are not here.
   "vars": {
     // Origin used to build links that leave the app (Stripe redirects, waiver
     // links). Leave empty to use the origin of the incoming request, which is
     // correct for both `wrangler dev` and workers.dev. Set it only when the
     // canonical origin differs from the one being served, e.g. behind a custom
-    // domain you want every link to use.
-    "PUBLIC_BASE_URL": "",
+    // domain you want every link to use -- as here.
+    "PUBLIC_BASE_URL": "https://coyoteridgeairsoft.com",
     "WAIVER_VALID_DAYS": "365",
     "HOLD_MINUTES": "30",
 
     // Where the contact form delivers.
     "CONTACT_EMAIL": "coyoteridgeairsoft@gmail.com",
 
-    // Resend will only send from a domain verified on the account, so this has
-    // to be changed alongside verifying one -- an unverified sender fails every
-    // send. "onboarding@resend.dev" needs no DNS but only delivers to the
-    // address that owns the Resend account, which makes it useful for testing
-    // and wrong for production.
-    "CONTACT_FROM": "Coyote Ridge Airsoft <onboarding@resend.dev>"
+    // Must stay on a domain verified on the Resend account: Resend refuses
+    // every send from anything else, and the refusal costs the field's
+    // notification while the visitor is still told their message was received.
+    //
+    // Not a testing sender. Anything @resend.dev is Resend's shared sandbox,
+    // which delivers only to the address that owns the Resend account -- so
+    // pointing this at resend.dev while CONTACT_EMAIL is the field's Gmail
+    // rejects every message with a 403, which is exactly what it did.
+    "CONTACT_FROM": "Coyote Ridge Airsoft <noreply@coyoteridgeairsoft.com>"
   },
 
   "observability": {

@@ -146,5 +146,16 @@ tr.done { color: var(--mut); }
 .pill.bad { color: var(--danger); border-color: var(--danger); }
 .pill.warnp { color: var(--orange); border-color: var(--orange); }
 
+/* Contact form messages in the staff console. */
+.msg-head {
+  display: flex; gap: 10px; align-items: flex-start; justify-content: space-between;
+}
+.msg-head a { color: var(--orange); }
+/* The sender's own line breaks: a message typed as paragraphs is read as
+   paragraphs, and `pre-wrap` still wraps long lines to the panel. */
+.msg-body {
+  white-space: pre-wrap; overflow-wrap: anywhere; margin: 12px 0 0; font-size: 14px;
+}
+
 .stack > * + * { margin-top: 10px; }
 .hidden { display: none !important; }

@@ -137,14 +137,6 @@
   var EVENTS = [
     {
       mon: 'AUG',
-      dd: '15',
-      day: 'SAT',
-      title: 'Open Play',
-      time: '9:00 AM – 4:00 PM',
-      url: 'https://form.jotform.com/261820920022041',
-    },
-    {
-      mon: 'AUG',
       dd: '29',
       day: 'SAT',
       title: 'Open Play',
@@ -305,8 +297,8 @@
      Friday gate opens 90 minutes before first call and its Saturday gate two
      and a half hours before, both of which are on the event's own form. */
   var SCHEDULE_INTRO =
-    'Two open play days and a two-day camp out, and everyone is welcome. Games run ' +
-    'rain or shine. On open play days gates open 60 minutes before first call for ' +
+    'An open play day and a two-day camp out, and everyone is welcome. Games run ' +
+    'rain or shine. On the open play day gates open 60 minutes before first call for ' +
     'chrono and the safety brief.';
 
   var SCHEDULE_DISCLAIMER = 'Dates subject to change due to weather or field conditions.';

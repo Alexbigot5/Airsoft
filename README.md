@@ -119,7 +119,7 @@ curl "http://localhost:8787/cdn-cgi/handler/scheduled"
 
 ## Going live
 
-These steps need a Cloudflare account and a Stripe account.
+These steps need a Cloudflare account, a Stripe account, and a Resend account.
 
 ```bash
 npx wrangler login
@@ -129,14 +129,20 @@ npx wrangler d1 migrations apply airsoft-db --remote
 npx wrangler secret put ADMIN_TOKEN            # staff token for /admin
 npx wrangler secret put STRIPE_SECRET_KEY
 npx wrangler secret put STRIPE_WEBHOOK_SECRET
+npx wrangler secret put RESEND_API_KEY          # contact form notifications
 
 npx wrangler deploy
 ```
 
-`PUBLIC_BASE_URL` can stay empty: Stripe redirect and waiver links are built
-from the origin of the incoming request, which is correct on workers.dev and in
-local dev alike. Set it only if you put a custom domain in front and want every
-link to use that canonical origin instead.
+Verify `coyoteridgeairsoft.com` on Resend before that deploy, or the contact
+form's notifications will be refused — see "Contact form email" below. Send a
+test message afterwards and check it on `/admin`: "Emailed" means the whole
+path works, and "Not emailed" prints Resend's own reason under the message.
+
+`PUBLIC_BASE_URL` is set to `https://coyoteridgeairsoft.com` because that custom
+domain is what every Stripe redirect and waiver link should use. Empty is the
+right value without one: those links are then built from the origin of the
+incoming request, which is correct on workers.dev and in local dev alike.
 
 If you deploy through **Workers Builds** (connected repo) rather than from your
 machine, note that it runs `wrangler deploy` directly — npm lifecycle hooks do
@@ -181,16 +187,33 @@ Workers cannot open an SMTP connection, so mail goes out over an HTTP API —
 npx wrangler secret put RESEND_API_KEY
 ```
 
+The key alone is not enough: the sender has to be a domain **verified on the
+Resend account**, which means adding the DKIM and SPF records Resend gives you
+to `coyoteridgeairsoft.com`'s DNS and waiting for the Domains page to go green.
+Verify the domain *before* deploying a `CONTACT_FROM` on it — Resend refuses
+sends from a domain it has not verified yet, whichever way round you do it.
+
 Two vars in `wrangler.jsonc` control the rest:
 
-- `CONTACT_EMAIL` — where messages are delivered. Defaults to
-  `coyoteridgeairsoft@gmail.com` if unset.
-- `CONTACT_FROM` — who they come from. **Resend refuses any sender outside a
-  domain verified on the account**, so this has to change at the same time as
-  verifying one. Verifying a domain means adding the DKIM and SPF records Resend
-  gives you to that domain's DNS. The committed value is
-  `onboarding@resend.dev`, which needs no DNS but only delivers to the address
-  that owns the Resend account — right for testing, wrong for production.
+- `CONTACT_EMAIL` — where messages are delivered.
+- `CONTACT_FROM` — who they come from, and the one that has to sit on the
+  verified domain.
+
+**Nothing @resend.dev belongs in `CONTACT_FROM` on a deployment.** That is
+Resend's shared sandbox domain, and it delivers *only to the address that owns
+the Resend account*; every other recipient is refused with
+`403 — the domain is not verified`. It is useful for a local send to your own
+inbox and wrong everywhere else. This bit the field for real: production ran
+`noreply@resend.dev` against a `CONTACT_EMAIL` of `coyoteridgeairsoft@gmail.com`
+while the Resend account was registered to a different address, so every message
+the form ever took was stored and then rejected, and the 403 went to a log
+nobody read.
+
+Edit both vars **here, not in the dashboard**. `wrangler deploy` deletes every
+var on the Worker and re-sets them from `wrangler.jsonc`, so a value typed into
+the dashboard's "Variables and secrets" panel lasts until the next deploy and
+then reverts with no warning. Secrets are exempt, which is why `RESEND_API_KEY`
+is set with `wrangler secret put` and is not in the config file.
 
 The visitor's address goes in `reply_to`, so hitting Reply in the inbox answers
 them rather than the Worker. Message bodies are sent as plain text and never as

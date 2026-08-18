@@ -50,6 +50,15 @@
         </table>
       </div>
 
+      <h2>Messages</h2>
+      <p class="muted small">Everything sent from the "Send a message" form on the
+        Contact page, newest first. A message marked <span class="pill bad">Not
+        emailed</span> arrived here but its inbox notification did not go out, so
+        this panel is the only place it can be read. Reply from your own mail
+        client, to the address on the message.</p>
+      <button class="btn ghost small" id="refreshMessages" type="button">Refresh</button>
+      <div id="messages"></div>
+
       <h2>Maintenance</h2>
       <button class="btn ghost small" id="sweep" type="button">Release expired holds now</button>
       <span class="muted small" id="sweepResult"></span>

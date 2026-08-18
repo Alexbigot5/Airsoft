@@ -26,8 +26,8 @@ Everything under `src/`, `public/` and `migrations/` is the part you maintain.
 - **Payments** — Stripe Checkout. The Worker creates the session; a signed,
   idempotent webhook is what actually marks a booking paid.
 - **Staff console** — `/admin`, gated by a shared token. Day-of roster, mark
-  paid (cash at the gate), check in. **Check-in is refused for anyone without a
-  current signed waiver.**
+  paid (cash at the gate), check in, and read the contact form's messages.
+  **Check-in is refused for anyone without a current signed waiver.**
 - **Contact form** — the marketing page's "Send a message" panel. Messages are
   stored in D1 and emailed to the field, in that order, so a mail outage costs a
   notification rather than the message.
@@ -87,7 +87,8 @@ exercises the production path rather than a shortcut around it.
    found by email and entry is allowed.
 7. `/` → Contact → fill in "Send a message" and send. With `RESEND_API_KEY`
    empty the message is stored and not emailed, which is the point: it is still
-   there at `GET /api/admin/messages`, marked `emailed: false`.
+   there under "Messages" on `/admin`, marked "Not emailed", and at
+   `GET /api/admin/messages` with `emailed: false`.
 
 Inspect state directly at any point:
 
@@ -166,9 +167,11 @@ in the fully unconfigured local mode.
 ### Contact form email
 
 Messages from the "Send a message" form on the Contact page are **always stored**
-in `contact_messages` and readable at `GET /api/admin/messages`. Emailing them
-on to the field's inbox is the part that needs setting up, and a deployment
-without it loses notifications, not messages.
+in `contact_messages` and readable under "Messages" on `/admin` (and at
+`GET /api/admin/messages`). Emailing them on to the field's inbox is the part
+that needs setting up, and a deployment without it loses notifications, not
+messages — which is why the console shows each message's delivery state beside
+it: "Not emailed" on `/admin` is how anyone finds out mail is misconfigured.
 
 Workers cannot open an SMTP connection, so mail goes out over an HTTP API —
 [Resend](https://resend.com) here, called from `src/mail.ts` the same way
@@ -196,7 +199,8 @@ markup in the field's mailbox would hand them working links in front of staff.
 
 If a send fails, the row keeps `emailed = 0` and the reason in `error`, the
 Worker logs it, and the visitor is still told the message was received — because
-it was. Check `GET /api/admin/messages` for anything with `emailed: false`.
+it was. Check the "Messages" panel on `/admin` for anything marked "Not emailed";
+the reason from Resend is printed under the message.
 
 Two things keep the endpoint from being a spam relay: a honeypot field that is
 hidden from people and dropped silently when filled, and a per-IP limit of five

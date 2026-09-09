@@ -136,14 +136,6 @@
    */
   var EVENTS = [
     {
-      mon: 'AUG',
-      dd: '29',
-      day: 'SAT',
-      title: 'Open Play',
-      time: '9:00 AM – 4:00 PM',
-      url: 'https://form.jotform.com/261835114941153',
-    },
-    {
       mon: 'SEP',
       dd: '18–19',
       day: 'FRI–SAT',
@@ -293,13 +285,14 @@
     'Every photo here is from a Coyote Ridge game day: the terrain, the ' +
     'structures and the players who show up for them.';
 
-  /* The gates line is qualified because the camp out does not keep it: its
-     Friday gate opens 90 minutes before first call and its Saturday gate two
-     and a half hours before, both of which are on the event's own form. */
+  /* Counts what is in EVENTS, so it is rewritten whenever that list changes.
+     There is no gates line while the camp out is the only thing on it: gates 60
+     minutes before first call was the open play days' and the camp out does not
+     keep it -- its Friday gate opens 90 minutes before first call and its
+     Saturday gate two and a half hours before, both of which are on the event's
+     own form. The sentence goes back with the next open play day. */
   var SCHEDULE_INTRO =
-    'An open play day and a two-day camp out, and everyone is welcome. Games run ' +
-    'rain or shine. On the open play day gates open 60 minutes before first call for ' +
-    'chrono and the safety brief.';
+    'A two-day camp out, and everyone is welcome. Games run rain or shine.';
 
   var SCHEDULE_DISCLAIMER = 'Dates subject to change due to weather or field conditions.';
 

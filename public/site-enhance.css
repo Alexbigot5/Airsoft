@@ -97,13 +97,127 @@
    About page gallery
    ---------------------------------------------------------------------------
 
-   The bundle's own .gallgrid, kept as it is apart from this: its cells are
-   210px of a three-column grid, which crops a photograph taken in portrait to a
-   band across the middle. One cell spans two rows instead, so the tallest photo
-   on the page has somewhere to go. See ABOUT_GALLERY in site-enhance.js, where
-   the spans have to add up to whole rows. */
+   The bundle's own .gallgrid is hidden and this stands in its place: a single
+   row of photographs that scrolls sideways, so the section holds as many as are
+   worth showing instead of as many as fit above the fold. See ABOUT_GALLERY in
+   site-enhance.js.
 
-.gallgrid .cr-about-tall { grid-row: span 2; }
+   Cells are one height and take their width from their shape, which is what
+   keeps a photo taken upright from being cropped to a band across its middle.
+   The two galleries still read as different blocks: the home page's is a grid
+   of four columns, this one is a strip. */
+
+.cr-strip {
+  position: relative;
+  margin-top: 44px;
+}
+
+.cr-strip-track {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  /* Proximity, not mandatory: mandatory snapping parks the last cell on its own
+     snap point and never lets the track reach the true end of its range, which
+     is the position the forward arrow watches for to switch itself off. */
+  scroll-snap-type: x proximity;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  /* Room under the row for the scrollbar, so it does not sit over the photos. */
+  padding-bottom: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--orange) var(--panel);
+}
+
+.cr-strip-track:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 4px;
+}
+
+/* WebKit takes the bar from ::-webkit-scrollbar rather than scrollbar-color. */
+.cr-strip-track::-webkit-scrollbar { height: 6px; }
+.cr-strip-track::-webkit-scrollbar-track { background: var(--panel); }
+.cr-strip-track::-webkit-scrollbar-thumb { background: var(--orange); }
+
+.cr-strip-cell {
+  flex: 0 0 auto;
+  width: 400px;
+  height: 300px;
+  scroll-snap-align: start;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  margin: 0;
+  background: var(--panel);
+}
+
+/* 3:4 at the same height, near enough that the crop is a trim rather than a
+   band across the middle. */
+.cr-strip-portrait { width: 225px; }
+
+.cr-strip img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: saturate(1.05);
+  transition: transform 0.4s ease;
+}
+
+.cr-strip-cell:hover img { transform: scale(1.04); }
+
+/* The arrows are for pointer users; a touch screen has the swipe and a keyboard
+   has the arrow keys, and on either the buttons would only cover a photo. */
+.cr-strip-arrow { display: none; }
+
+@media (hover: hover) and (pointer: fine) {
+  .cr-strip-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: calc(50% - 7px); /* less half the track's padding-bottom */
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--line);
+    background: rgba(11, 12, 14, 0.82);
+    color: #fff;
+    cursor: pointer;
+    /* Visible at rest, because a row that is cut off at the edge is the only
+       other sign that there is more of it. Full strength once the pointer is
+       over the strip. */
+    opacity: 0.6;
+    transition: opacity 0.2s ease, background 0.2s ease;
+  }
+
+  .cr-strip-arrow svg { width: 20px; height: 20px; }
+  .cr-strip-prev { left: 10px; }
+  .cr-strip-next { right: 10px; }
+
+  .cr-strip:hover .cr-strip-arrow { opacity: 1; }
+
+  .cr-strip-arrow:hover {
+    background: var(--orange);
+    color: #0b0c0e;
+  }
+
+  /* At either end of the scroll range: gone rather than dimmed, so there is
+     nothing there to click at all. Both classes, so this outweighs the hover
+     rule above rather than tying with it -- an arrow that cannot go anywhere
+     must stay hidden while the pointer is over the strip, which is the only
+     time it would be seen at all. */
+  .cr-strip .cr-strip-arrow.cr-strip-off {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cr-strip-track { scroll-behavior: auto; }
+  .cr-strip img { transition: none; }
+  .cr-strip-cell:hover img { transform: none; }
+  .cr-strip-arrow { transition: none; }
+}
 
 /* ---------------------------------------------------------------------------
    Contact page: Instagram, Discord + directions
@@ -442,7 +556,12 @@
   .tabs { width: 100% !important; overflow-x: auto; }
   .tab { white-space: nowrap; }
 
-  .gallgrid { grid-template-columns: 1fr 1fr !important; grid-auto-rows: 150px !important; }
+  /* Smaller cells on a phone, so more than one photo is on screen at a time and
+     the strip reads as something to swipe rather than as a single image. */
+  .cr-strip { margin-top: 32px; }
+  .cr-strip-cell { width: 260px; height: 195px; }
+  .cr-strip-portrait { width: 146px; }
+
   /* Two columns keeps the wide cell spanning the full width and the other six
      paired off -- four tidy rows, still no ragged tail. */
   .cr-gallery { grid-template-columns: 1fr 1fr; grid-auto-rows: 150px; margin-top: 32px; }

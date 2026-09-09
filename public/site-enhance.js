@@ -228,10 +228,7 @@
    * reading about rather than a stand-in for it.
    *
    * ABOUT_CARD is the tall card beside the opening copy. The lineup is the right
-   * photo for a section about who plays here, which is why it appears again in
-   * the grid below -- the export reused a photo across the two the same way, and
-   * with eight photographs in an eight-cell grid one of them has to be the one
-   * the card carries.
+   * photo for a section about who plays here.
    */
   var ABOUT_CARD = {
     src: '/img/team-lineup.jpg',
@@ -239,43 +236,77 @@
   };
 
   /**
-   * The "On the field" grid, in the order the cells are filled.
+   * The "On the field" photographs, in the order they scroll past.
    *
-   * The grid is three columns of 210px rows. The bundle's first cell spans two
-   * columns and two rows and it draws six of them in all; enhanceAboutPhotos()
-   * adds cells for any entry past the sixth. `tall` spans two rows, which is the
-   * one cell shaped for a photograph taken in portrait.
+   * The export drew these as a three-column grid, which meant the section could
+   * only ever hold as many photos as fitted above the fold -- and the count was
+   * not free-form either, because the cell spans had to add up to whole rows.
+   * enhanceAboutPhotos() hides that grid and builds a horizontal strip instead:
+   * a row of fixed-height cells that scrolls sideways, so the list below can be
+   * as long as there are photographs worth showing and adding one is only ever
+   * adding one line here.
    *
-   * The count is not free-form: the spans have to add up to whole rows of three.
-   * The wide cell is four cells' worth and the tall one is two, so these eight
-   * entries come to twelve -- four full rows, no ragged tail. Adding or removing
-   * a photo means re-checking that arithmetic, the same as the home page's.
+   * `portrait` is the only shape hint left. Cells are a uniform height and take
+   * their width from it -- landscape ones are wide, portrait ones narrow -- so a
+   * photo taken upright is not cropped to a band across its middle.
    */
   var ABOUT_GALLERY = [
     {
+      src: '/img/group-netting-wall.jpg',
+      alt: 'The whole game day lined up for a group photo against the netting',
+    },
+    {
       src: '/img/flag-barricade.jpg',
       alt: 'A player kneeling behind a wooden barricade below the flag',
+    },
+    {
+      src: '/img/tree-corner-shot.jpg',
+      alt: 'A player leaning past a tree to shoot down the trail',
+      portrait: true,
     },
     {
       src: '/img/prone-cover.jpg',
       alt: 'A player prone behind a plywood wall with a rifle up',
     },
     {
+      src: '/img/prone-barrels.jpg',
+      alt: 'A player going prone behind a pair of barrels to hold the treeline',
+      portrait: true,
+    },
+    {
       src: '/img/stacked-wall.jpg',
       alt: 'A player stacked on a plywood wall, seen from behind',
     },
     {
+      src: '/img/hit-call-walk.jpg',
+      alt: 'A player calling a hit and walking out with a hand up',
+      portrait: true,
+    },
+    {
+      src: '/img/group-trail-lineup.jpg',
+      alt: 'A team lined up on the trail at the end of a game',
+    },
+    {
       src: ABOUT_CARD.src,
       alt: ABOUT_CARD.alt,
-      tall: true,
+      portrait: true,
     },
     {
       src: '/img/rain-huddle.jpg',
       alt: 'Players sitting out a rain shower in the grass between games',
     },
     {
+      src: '/img/pair-by-the-wall.jpg',
+      alt: 'A parent and child kitted up together beside the wooden wall',
+      portrait: true,
+    },
+    {
       src: '/img/team-armbands.jpg',
       alt: 'A team waiting in the trees with pink armbands before a game',
+    },
+    {
+      src: '/img/group-ghillie-suits.jpg',
+      alt: 'A game day group photo, ghillie suits among the camouflage',
     },
     {
       src: '/img/barricade-push.jpg',
@@ -286,6 +317,13 @@
       alt: 'Players regrouping by the netting between games',
     },
   ];
+
+  /**
+   * A landscape cell and the gap after it, which is what the arrow buttons hold
+   * back from a page so a photo carries across the jump. Kept in step with
+   * .cr-strip-cell in site-enhance.css.
+   */
+  var STRIP_CELL_STEP = 412;
 
   var GALLERY_EYEBROW = '01 / Field gallery';
   var GALLERY_HEADING = 'Shots from game day';
@@ -608,59 +646,164 @@
   // -------------------------------------------------------------------------
 
   /**
-   * Points the About page's images at the photographs in ABOUT_CARD and
-   * ABOUT_GALLERY.
-   *
-   * The `src` values in the bundle are the export's own asset ids, resolved by
-   * its loader. This rewrites that attribute rather than replacing the image:
-   * a node put in from here is one React can drop on the next render, and
-   * setAttr() writes only when the value would actually change, which is what
-   * keeps a re-render from waking the observer that scheduled it.
+   * Replaces the About page's "On the field" grid with a scrolling strip of the
+   * photographs in ABOUT_GALLERY, and points the card beside the opening copy at
+   * ABOUT_CARD.
    *
    * The grid is the only .gallgrid the bundle draws and it belongs to the About
-   * page, which is what scopes this to it. The card beside the opening copy is
-   * the one .fieldcard with nothing over its photograph -- the home page's are
-   * the same class with a .fc-body of copy inside.
+   * page, which is what scopes this to it. It is hidden rather than emptied and
+   * the strip is a node of ours appended beside it -- the same arrangement the
+   * home page gallery is on, and for the same reason: React owns those cells and
+   * puts back anything removed from under it, but it leaves a sibling alone.
+   * Hiding rather than deleting is also what keeps the grid findable on every
+   * pass, which is how the strip gets rebuilt if a re-render does drop it.
+   *
+   * The card is the bundle's own image and is written through setAttr(), which
+   * writes only when the value would actually change -- an unconditional write
+   * on every pass would wake the observer that scheduled this one.
    */
   function enhanceAboutPhotos() {
     var grid = document.querySelector('.gallgrid');
     if (!grid) return; // not the About page
 
-    // The bundle draws six cells and ABOUT_GALLERY is longer than that. The
-    // extras are appended rather than the grid rebuilt, so the cells the bundle
-    // owns keep their own spans, and they are re-appended on the pass after a
-    // re-render drops them -- the same deal the home page gallery is on.
-    var cells = grid.querySelectorAll('.gallcell');
-    for (var n = cells.length; n < ABOUT_GALLERY.length; n++) {
-      var added = el('div', 'gallcell');
-      added.appendChild(el('img'));
-      grid.appendChild(added);
-    }
-    cells = grid.querySelectorAll('.gallcell');
-
-    for (var i = 0; i < cells.length; i++) {
-      var photo = ABOUT_GALLERY[i];
-      // Hidden rather than removed, like the sample game rows and the mode
-      // cards: React owns these cells and puts back anything deleted.
-      setClass(cells[i], 'cr-hidden', !photo);
-      setClass(cells[i], 'cr-about-tall', !!(photo && photo.tall));
-      if (!photo) continue;
-
-      var img = cells[i].querySelector('img');
-      setPhoto(img, photo);
-      // The grid is below the fold on every viewport, and eight photographs is
-      // real weight to put in front of the first paint. The card above is not
-      // lazy for the same reason: it is the one image on the page that is not.
-      setAttr(img, 'loading', 'lazy');
-      setAttr(img, 'decoding', 'async');
-    }
-
     var cards = document.querySelectorAll('.fieldcard');
     for (var j = 0; j < cards.length; j++) {
+      // The card beside the opening copy is the one .fieldcard with nothing over
+      // its photograph -- the home page's are the same class with a .fc-body of
+      // copy inside.
       if (cards[j].querySelector('.fc-body')) continue;
       setPhoto(cards[j].querySelector('img'), ABOUT_CARD);
     }
+
+    setClass(grid, 'cr-hidden', true);
+
+    var host = plainParent(grid);
+    if (!host || host.querySelector('.cr-strip')) return;
+
+    var track = el('div', 'cr-strip-track');
+    // Scrollable regions need to be reachable and labelled for anyone not using
+    // a mouse: this is what puts the strip in the tab order and lets the arrow
+    // keys move it.
+    track.tabIndex = 0;
+    track.setAttribute('role', 'region');
+    track.setAttribute('aria-label', 'Photos from Coyote Ridge game days');
+
+    for (var i = 0; i < ABOUT_GALLERY.length; i++) {
+      var photo = ABOUT_GALLERY[i];
+      var cell = el('figure', 'cr-strip-cell' + (photo.portrait ? ' cr-strip-portrait' : ''));
+      var img = el('img');
+      img.src = photo.src;
+      img.alt = photo.alt;
+      // Only the first few cells are on screen at rest, and the rest of the
+      // strip is real weight to put in front of the first paint. The card above
+      // is not lazy for the same reason: it is the one image here that is not.
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      cell.appendChild(img);
+      track.appendChild(cell);
+    }
+
+    var strip = el('div', 'cr-strip');
+    strip.appendChild(track);
+    strip.appendChild(stripArrow(-1));
+    strip.appendChild(stripArrow(1));
+
+    // Where the grid was, rather than at the end of the section: the heading and
+    // the copy above it are the bundle's and stay put. The grid's own parent may
+    // be one of the custom elements plainParent() skipped, in which case the
+    // grid is not a child of `host` and the node to insert after is whichever
+    // ancestor of it is -- insertBefore() throws on a reference node from
+    // anywhere else.
+    var anchor = grid;
+    while (anchor.parentElement && anchor.parentElement !== host) anchor = anchor.parentElement;
+    host.insertBefore(strip, anchor.nextSibling);
   }
+
+  /**
+   * One of the strip's two arrow buttons. `direction` is -1 for the one that
+   * scrolls back and 1 for the one that scrolls on.
+   *
+   * No click handler here: what the bundle puts in the document is a *copy* of
+   * the node handed to it, and cloning carries attributes but not listeners, so
+   * one bound here would be on a node nobody ever clicks. The handler is on the
+   * document instead -- the same arrangement, and for a near enough reason, as
+   * the contact form's send button further down.
+   *
+   * The buttons are an addition for pointer users -- the strip scrolls by drag,
+   * wheel and arrow key without them -- so a screen reader that has the region
+   * itself is told to skip them.
+   */
+  function stripArrow(direction) {
+    var button = el('button', 'cr-strip-arrow ' + (direction < 0 ? 'cr-strip-prev' : 'cr-strip-next'));
+    button.type = 'button';
+    button.setAttribute('aria-hidden', 'true');
+    button.tabIndex = -1;
+    button.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="' + (direction < 0 ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7') + '"></path></svg>';
+    return button;
+  }
+
+  /**
+   * Turns off whichever arrow cannot go anywhere, rather than leaving one to do
+   * nothing when clicked.
+   *
+   * Called from apply() so the state is right from the first paint, and from the
+   * document's scroll listener below for every position after that. The end of
+   * the range comes a fraction short of scrollWidth - clientWidth on a
+   * fractional device pixel ratio, hence the pixel of slack at either end.
+   */
+  function updateStripArrows(track) {
+    var strip = track.parentElement;
+    if (!strip) return;
+    var prev = strip.querySelector('.cr-strip-prev');
+    var next = strip.querySelector('.cr-strip-next');
+    if (!prev || !next) return;
+    setClass(prev, 'cr-strip-off', track.scrollLeft <= 1);
+    setClass(next, 'cr-strip-off', track.scrollLeft >= track.scrollWidth - track.clientWidth - 1);
+  }
+
+  function updateAllStripArrows() {
+    var tracks = document.querySelectorAll('.cr-strip-track');
+    for (var i = 0; i < tracks.length; i++) updateStripArrows(tracks[i]);
+  }
+
+  /* Scroll does not bubble, so this listens in the capture phase, which is the
+     one place a single listener sees it happen anywhere on the page. */
+  document.addEventListener(
+    'scroll',
+    function (event) {
+      var track = event.target;
+      if (track && track.classList && track.classList.contains('cr-strip-track')) {
+        updateStripArrows(track);
+      }
+    },
+    true,
+  );
+
+  /* On the document for the same reason the arrows carry no handler of their
+     own. Bubble phase, unlike the two capture listeners on this event: there is
+     nothing of the bundle's to get in front of here, and site-hook.js matches
+     buttons on their text, which these -- an icon and nothing else -- have none
+     of. */
+  document.addEventListener('click', function (event) {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey) return;
+
+    var target = event.target;
+    var button = target && target.closest ? target.closest('.cr-strip-arrow') : null;
+    if (!button || button.classList.contains('cr-strip-off')) return;
+
+    var track = button.parentElement && button.parentElement.querySelector('.cr-strip-track');
+    if (!track) return;
+
+    // A page of the visible width less one cell keeps a photo on screen across
+    // the jump, so it reads as the strip moving rather than as a cut to
+    // somewhere else.
+    var step = Math.max(track.clientWidth - STRIP_CELL_STEP, STRIP_CELL_STEP);
+    var direction = button.classList.contains('cr-strip-prev') ? -1 : 1;
+    track.scrollBy({ left: direction * step, behavior: 'smooth' });
+  });
 
   function setPhoto(img, photo) {
     setAttr(img, 'src', photo.src);
@@ -1518,6 +1661,7 @@
       fixFieldSize();
       enhanceHomeGallery();
       enhanceAboutPhotos();
+      updateAllStripArrows();
       enhanceContact();
       enhanceMessageForm();
       enhanceSchedules();

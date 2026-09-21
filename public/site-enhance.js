@@ -149,6 +149,19 @@
       ],
       url: 'https://form.jotform.com/262077660532154',
     },
+    {
+      mon: 'OCT',
+      dd: '24',
+      day: 'SAT',
+      title: 'Halloween Games',
+      time: '11:00 AM – 5:00 PM',
+      chips: ['Gates 9:00–10:30 AM, no late entry'],
+      pricing: [
+        { label: 'Early bird, until 10/10', value: '$25' },
+        { label: 'After 10/10', value: '$30' },
+      ],
+      url: 'https://form.jotform.com/262454921487162',
+    },
   ];
 
   /** The open play prices, used by every game day that does not set its own. */
@@ -324,13 +337,13 @@
     'structures and the players who show up for them.';
 
   /* Counts what is in EVENTS, so it is rewritten whenever that list changes.
-     There is no gates line while the camp out is the only thing on it: gates 60
-     minutes before first call was the open play days' and the camp out does not
-     keep it -- its Friday gate opens 90 minutes before first call and its
-     Saturday gate two and a half hours before, both of which are on the event's
-     own form. The sentence goes back with the next open play day. */
+     There is no shared gates line: the camp out's Friday gate opens 90 minutes
+     before first call and its Saturday gate two and a half hours before, and the
+     Halloween games' gate runs 9:00-10:30 AM for an 11:00 AM start, which is on
+     that row's own chip. */
   var SCHEDULE_INTRO =
-    'A two-day camp out, and everyone is welcome. Games run rain or shine.';
+    'A two-day camp out and a Halloween game day, and everyone is welcome. ' +
+    'Games run rain or shine.';
 
   var SCHEDULE_DISCLAIMER = 'Dates subject to change due to weather or field conditions.';
 

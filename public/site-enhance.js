@@ -136,20 +136,6 @@
    */
   var EVENTS = [
     {
-      mon: 'SEP',
-      dd: '18–19',
-      day: 'FRI–SAT',
-      title: 'End of Summer Camp Out',
-      time: 'Fri 3:00 PM – Sat 4:00 PM',
-      chips: ['Night games', 'Camping included'],
-      pricing: [
-        { label: 'Both days, until 8/31', value: '$40' },
-        { label: 'Both days, after 8/31', value: '$50' },
-        { label: 'Saturday only', value: '$30' },
-      ],
-      url: 'https://form.jotform.com/262077660532154',
-    },
-    {
       mon: 'OCT',
       dd: '24',
       day: 'SAT',
@@ -337,13 +323,11 @@
     'structures and the players who show up for them.';
 
   /* Counts what is in EVENTS, so it is rewritten whenever that list changes.
-     There is no shared gates line: the camp out's Friday gate opens 90 minutes
-     before first call and its Saturday gate two and a half hours before, and the
-     Halloween games' gate runs 9:00-10:30 AM for an 11:00 AM start, which is on
-     that row's own chip. */
+     There is no gates line: the Halloween games' gate runs 9:00-10:30 AM for an
+     11:00 AM start, not the 60 minutes before first call the open play days
+     kept, and that window is on the row's own chip. */
   var SCHEDULE_INTRO =
-    'A two-day camp out and a Halloween game day, and everyone is welcome. ' +
-    'Games run rain or shine.';
+    'A Halloween game day, and everyone is welcome. Games run rain or shine.';
 
   var SCHEDULE_DISCLAIMER = 'Dates subject to change due to weather or field conditions.';
 

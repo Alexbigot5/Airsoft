@@ -129,6 +129,9 @@
    *   `chips`   extra chips beside the time, for what a title cannot carry
    *             (night games, camping). Omit it and the row shows the time and
    *             "Everyone welcome", the same as every other day.
+   *   `schedule` the day's run of show, as { time, label } pairs listed under
+   *             the title. For a day whose arrival times matter more than one
+   *             chip can say; omit it and the row has no list.
    *   `pricing` this day's prices in place of PRICING below. Only set it when
    *             the day really is priced differently -- an open play day left
    *             with its own copy of the standard prices is a second place to
@@ -154,8 +157,17 @@
       dd: '24',
       day: 'SAT',
       title: 'Halloween Games',
-      time: '11:00 AM – 5:00 PM',
-      chips: ['Gates 9:00–10:30 AM, no late entry'],
+      time: '1:45 PM – 9:00 PM',
+      chips: ['Gates 12:00–1:00 PM, no late entry'],
+      schedule: [
+        { time: '12:00 PM', label: 'Gate opens' },
+        { time: '1:00 PM', label: 'Gate closes, no late entry' },
+        { time: '1:15 PM', label: 'Gear check & chrono deadline' },
+        { time: '1:30 PM', label: 'Mandatory safety briefing' },
+        { time: '1:45 PM', label: 'Games begin' },
+        { time: '5:00 PM', label: 'Pizza break, until 5:45 PM' },
+        { time: '9:00 PM', label: 'Event ends' },
+      ],
       pricing: [
         { label: 'Early bird, until 10/10', value: '$25' },
         { label: 'After 10/10', value: '$30' },
@@ -339,8 +351,8 @@
   /* Counts what is in EVENTS, so it is rewritten whenever that list changes.
      There is no shared gates line: the camp out's Friday gate opens 90 minutes
      before first call and its Saturday gate two and a half hours before, and the
-     Halloween games' gate runs 9:00-10:30 AM for an 11:00 AM start, which is on
-     that row's own chip. */
+     Halloween games' gate runs 12:00-1:00 PM for a 1:45 PM start, which is on
+     that row's own chip and schedule. */
   var SCHEDULE_INTRO =
     'A two-day camp out and a Halloween game day, and everyone is welcome. ' +
     'Games run rain or shine.';
@@ -1131,6 +1143,15 @@
     }
     body.appendChild(chips);
     body.appendChild(el('h3', 'cond cr-event-title', game.title));
+    var steps = game.schedule || [];
+    if (steps.length) {
+      var list = el('dl', 'cr-run');
+      for (var s = 0; s < steps.length; s++) {
+        list.appendChild(el('dt', null, steps[s].time));
+        list.appendChild(el('dd', null, steps[s].label));
+      }
+      body.appendChild(list);
+    }
     row.appendChild(body);
 
     var price = el('div', 'cr-price');

@@ -155,8 +155,8 @@
         { time: '9:00 PM', label: 'Event ends' },
       ],
       pricing: [
-        { label: 'Early bird, until 10/10', value: '$25' },
-        { label: 'After 10/10', value: '$30' },
+        { label: 'Early bird, until 10/10', value: '$30' },
+        { label: 'After 10/10', value: '$35' },
       ],
       url: 'https://form.jotform.com/262454921487162',
     },

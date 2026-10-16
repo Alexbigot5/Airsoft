@@ -342,6 +342,21 @@
   margin: 0;
 }
 
+/* A game day's run of show, under its title. */
+.cr-run {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 14px;
+  margin: 12px 0 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.cr-run dt {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  color: var(--orange);
+}
+.cr-run dd { margin: 0; color: var(--mut); }
+
 .cr-price {
   display: grid;
   gap: 6px;

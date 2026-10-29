@@ -139,26 +139,22 @@
    */
   var EVENTS = [
     {
-      mon: 'OCT',
-      dd: '24',
+      mon: 'NOV',
+      dd: '14',
       day: 'SAT',
-      title: 'Halloween Games',
-      time: '1:45 PM – 9:00 PM',
+      title: 'Open Play',
+      time: '1:45 PM – 8:00 PM',
       chips: ['Gates 12:00–1:00 PM, no late entry'],
-      schedule: [
-        { time: '12:00 PM', label: 'Gate opens' },
-        { time: '1:00 PM', label: 'Gate closes, no late entry' },
-        { time: '1:15 PM', label: 'Gear check & chrono deadline' },
-        { time: '1:30 PM', label: 'Mandatory safety briefing' },
-        { time: '1:45 PM', label: 'Games begin' },
-        { time: '5:00 PM', label: 'Pizza break, until 5:45 PM' },
-        { time: '9:00 PM', label: 'Event ends' },
-      ],
-      pricing: [
-        { label: 'Early bird, until 10/10', value: '$30' },
-        { label: 'After 10/10', value: '$35' },
-      ],
-      url: 'https://form.jotform.com/262454921487162',
+      url: 'https://form.jotform.com/263005452356149',
+    },
+    {
+      mon: 'DEC',
+      dd: '12',
+      day: 'SAT',
+      title: 'Open Play',
+      time: '1:45 PM – 8:00 PM',
+      chips: ['Gates 12:00–1:00 PM, no late entry'],
+      url: 'https://form.jotform.com/263006034094145',
     },
   ];
 
@@ -335,11 +331,11 @@
     'structures and the players who show up for them.';
 
   /* Counts what is in EVENTS, so it is rewritten whenever that list changes.
-     There is no gates line: the Halloween games' gate runs 12:00-1:00 PM for a
-     1:45 PM start, not the 60 minutes before first call the open play days
-     kept, and that window is on the row's own chip and schedule. */
+     There is no gates line: both days' gate runs 12:00-1:00 PM for a 1:45 PM
+     start, not the 60 minutes before first call the older open play days
+     kept, and that window is on each row's own chip. */
   var SCHEDULE_INTRO =
-    'A Halloween game day, and everyone is welcome. Games run rain or shine.';
+    'Two open play days, and everyone is welcome. Games run rain or shine.';
 
   var SCHEDULE_DISCLAIMER = 'Dates subject to change due to weather or field conditions.';
 

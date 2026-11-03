@@ -8,7 +8,7 @@ as **read-only** — the Worker serves it and injects two scripts and a styleshe
 that carry every change made to it since: the real game-day schedule, the map,
 the Instagram and Discord links, the waiver call-to-action, the home-page
 gallery, the logo in the nav, a mobile menu, the field's real contact details,
-and the removal of its mock Book page.
+and a Private Parties & Birthdays page in place of its mock Book page.
 Everything under `src/`, `public/` and `migrations/` is the part you maintain.
 
 ## What it does
@@ -382,9 +382,9 @@ up on the roster for staff to resolve.
   brittleness `HIDDEN_FAQ_QUESTIONS` has; the fallback is the safety net. Still
   outstanding: the `<title>` of the waiver, register, success and admin pages.
 - **The FAQ is one entry.** "Do I need my own gear?" is all that is left on the
-  About page, and its answer is rewritten to say that gear rentals are not
-  available — the thing players turn up expecting, which the export's answer did
-  not mention. The age, group-booking, what-to-bring and rain questions are
+  About page, and its answer is rewritten to say that open play means bringing
+  your own gear and that rentals come with a private party package — the thing
+  players turn up expecting, which the export's answer did not mention. The age, group-booking, what-to-bring and rain questions are
   hidden. `HIDDEN_FAQ_QUESTIONS` and `FAQ_ANSWERS` in `public/site-enhance.js`
   both match on the question text, so rewording a question in the bundle brings
   its entry back, or brings back the export's own answer.
@@ -393,7 +393,14 @@ up on the roster for staff to resolve.
   the same thing and one of them maintained. `hideSafetyBrief()` in
   `public/site-enhance.js` finds it by its heading and hides the divider above
   it too. The Rules page is untouched.
-- **The Book page is gone**, along with its mock booking form. Buttons that name
+- **The Book page is the Private Parties & Birthdays page now.** Its mock
+  booking form is hidden and the party packages, terms and "Request a Private
+  Party" button (a Jotform; requests go to the field, who confirm the date,
+  gear and quote before taking payment) are drawn under its header. The nav and
+  footer item that opened it is relabelled "Parties". It has to be: site-hook.js
+  sends anything labelled "Book" to the Games page. All of the page's copy is
+  the `PARTY_*` constants in `public/site-enhance.js`.
+- **The Book page's booking form is gone.** Buttons that name
   no particular game day ("Reserve a spot", the nav's "Reserve →") now go to the
   Games page, since sign-up is per event and there is nowhere else for a generic
   button to lead. `/register` and the Stripe flow behind it are untouched and

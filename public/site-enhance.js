@@ -366,10 +366,6 @@
 
   var PARTY_EYEBROW = 'Book the whole field';
   var PARTY_HEADING = 'Private Parties & Birthdays';
-  var PARTY_INTRO =
-    'The field is yours for the session. A referee runs the games, and every ' +
-    'player gets a rental gun, a battery and a full-face mask.';
-
   var PARTY_PACKAGES = [
     {
       name: 'Three-hour session',
@@ -1484,7 +1480,10 @@
 
     setText(header.querySelector('.eyebrow .tag'), PARTY_EYEBROW);
     setText(heading, PARTY_HEADING);
-    setText(header.querySelector('p'), PARTY_INTRO);
+    // No intro under the heading. Hidden rather than emptied, like the rest of
+    // the bundle's nodes here; left alone, it is the Book page's own copy.
+    var intro = header.querySelector('p');
+    if (intro) setClass(intro, 'cr-hidden', true);
 
     var sections = page.querySelectorAll('.sec');
     for (var i = 0; i < sections.length; i++) {

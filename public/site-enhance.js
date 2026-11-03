@@ -12,13 +12,14 @@
  *     "CR" tiles
  *   - a working navigation menu on phones
  *   - copy with no em dashes in it, the bundle's own included
+ *   - the Private Parties & Birthdays page, where the mock Book page was
  *
  * It also corrects what the export made up: the field's phone number, address
  * and email, its "open Sat + Sun" status, its 40-acre Woodland field, and the
  * footer's stand-in operator name. Anything the export invented and this file
  * does not replace is a bug.
  *
- * It also takes things away: the Book page, whose booking form was a mock; the
+ * It also takes things away: the Book page's booking form, which was a mock; the
  * per-game player counts, which were sample numbers with nothing behind them;
  * and the copy that repeated itself, from the Games page safety brief -- a
  * paraphrase of the Rules page -- down to the FAQ entries answered elsewhere.
@@ -339,8 +340,135 @@
 
   var SCHEDULE_DISCLAIMER = 'Dates subject to change due to weather or field conditions.';
 
-  /** Removed from the site: its booking form was a mock. */
-  var HIDDEN_NAV_LABELS = ['book'];
+  /**
+   * The Private Parties & Birthdays page, and the only place to edit it.
+   *
+   * It lives where the export's Book page did. That page was a mock booking
+   * form, but it is a real page in the bundle, with its own nav item, footer
+   * link and header, so enhancePartyPage() keeps the page and its header and
+   * swaps everything under the header for what is below. The nav and footer
+   * items keep the bundle's handler and only change their label, from "Book"
+   * to PARTY_NAV_LABEL.
+   *
+   * That rename matters to more than the label. site-hook.js redirects
+   * anything labelled "Book" to the Games page, so the nav item reaches this
+   * page only once it reads PARTY_NAV_LABEL instead. The bundle's other
+   * "Reserve" buttons still say "Reserve" and still go to the Games page.
+   *
+   * Party requests come in through PARTY_FORM_URL and go to the field, who
+   * confirm the date, gear and final quote before taking any payment. Nothing
+   * on this page is paid for online.
+   */
+  var PARTY_NAV_LABEL = 'Parties';
+  var BUNDLE_BOOK_LABEL = 'book';
+  var BUNDLE_BOOK_HEADING = 'book a game';
+  var PARTY_FORM_URL = 'https://form.jotform.com/263054341587156';
+
+  var PARTY_EYEBROW = 'Book the whole field';
+  var PARTY_HEADING = 'Private Parties & Birthdays';
+  var PARTY_INTRO =
+    'The field is yours for the session. A referee runs the games, and every ' +
+    'player gets a rental gun, a battery and a full-face mask.';
+
+  var PARTY_PACKAGES = [
+    {
+      name: 'Three-hour session',
+      price: '$600',
+      lines: ['Up to 8 players included', 'Additional players $60 each', '1,000 BBs per player'],
+    },
+    {
+      name: 'Five-hour session',
+      price: '$850',
+      lines: ['Up to 8 players included', 'Additional players $85 each', '2,000 BBs per player'],
+    },
+  ];
+
+  var PARTY_PACKAGE_NOTES = [
+    'Smaller groups are welcome, but the full package minimum still applies.',
+    'Additional players are subject to availability.',
+    'Additional BBs are available for purchase. Food and drinks aren’t included.',
+    'Session time includes check-in, gear fitting, safety briefing, games, and breaks.',
+  ];
+
+  var PARTY_INCLUDES = [
+    'Private field access during the reserved session',
+    'A referee to organize games',
+    'A rental gun with battery for each player',
+    'A full-face mask for each player',
+  ];
+
+  /** What the request form asks for, listed beside its button. */
+  var PARTY_REQUEST_ITEMS = [
+    'Organizer’s name, phone number, and email',
+    'Preferred date and start time, plus an alternate date',
+    'Three-hour or five-hour package',
+    'Expected player count and player ages',
+    'Number needing rental gear',
+    'Occasion and any questions or special requests',
+  ];
+
+  /**
+   * The terms, one panel each. `list` and `link` are optional: a list goes
+   * after the first paragraph, and a link goes at the end of the panel.
+   */
+  var PARTY_POLICIES = [
+    {
+      title: 'Equipment availability',
+      paras: [
+        'Rental equipment is available by reservation. Please contact us to confirm ' +
+          'availability for your group size and preferred date.',
+        'Players bringing their own gear are welcome. Let us know when requesting ' +
+          'your booking.',
+      ],
+    },
+    {
+      title: 'Booking deposit',
+      paras: [
+        'A 25% booking deposit is required after we confirm availability. This is ' +
+          'applied toward the total party price, with the remaining balance due ' +
+          'before play begins.',
+        'The deposit increases accordingly for additional players. The date is ' +
+          'reserved once the deposit is paid and the booking is confirmed.',
+      ],
+      list: ['Three hours: $150 booking deposit', 'Five hours: $212.50 booking deposit'],
+    },
+    {
+      title: 'Cancellations & rescheduling',
+      paras: [
+        'The booking deposit is nonrefundable if the customer cancels or doesn’t ' +
+          'attend. One reschedule is allowed with at least seven days’ notice, ' +
+          'subject to availability.',
+        'If Coyote Ridge cancels because of unsafe conditions or another issue on ' +
+          'our end, customers can choose a refund or reschedule.',
+        'Final player count is due 72 hours before the event and determines the ' +
+          'minimum billed total, subject to the package minimum.',
+      ],
+    },
+    {
+      title: 'Refundable equipment deposit',
+      paras: [
+        'A separate $150 equipment security deposit is collected from the adult ' +
+          'organizer before rental gear is issued. This is additional to the party ' +
+          'price and is returned after equipment inspection if no deductions are ' +
+          'needed.',
+        'Documented damage caused by misuse or negligence, or missing equipment, ' +
+          'may be deducted. Normal wear and mechanical failures aren’t charged to ' +
+          'customers. Any deductions will be itemized, and responsibility for ' +
+          'damage or loss isn’t limited to the deposit amount.',
+      ],
+    },
+    {
+      title: 'Required forms',
+      paras: [
+        'Every player must complete the participation waiver. A parent or legal ' +
+          'guardian must complete it for minors.',
+        'Adult renters, or parents/guardians of minor renters, must also sign the ' +
+          'rental equipment agreement. The rental agreement is filled out on site ' +
+          'at check-in, before any gear is issued.',
+      ],
+      link: { label: 'Sign the waiver →', href: WAIVER_URL },
+    },
+  ];
 
   /**
    * FAQ entries taken off the About page, matched on the question as the export
@@ -365,13 +493,14 @@
    * question in the bundle and the export's own answer comes back.
    *
    * The export's answer listed what to wear and said nothing about rentals,
-   * which is the thing players actually turn up expecting.
+   * which is the thing players actually turn up expecting. Rentals exist only
+   * for private parties, so the answer says that rather than "not available".
    */
   var FAQ_ANSWERS = [
     [
       'do i need my own gear?',
-      'Yes. Every player brings their own marker, mask and BBs. Gear rentals are ' +
-        'not available at this time.',
+      'For open play, yes. Every player brings their own marker, mask and BBs. ' +
+        'Rental gear comes with a private party package.',
     ],
   ];
 
@@ -399,7 +528,8 @@
    * A list rather than a map because it is only ever consulted for a text node
    * that already contains a dash, which is a handful of nodes on any page.
    *
-   * Four of these are on screens no longer reachable (the Book page, and the
+   * Four of these are on screens no longer reachable (the Book page's header
+   * copy and booking form, both replaced by the party page, and the
    * group-booking and rain FAQ entries that are hidden on the About page). They
    * are here so that the page has no em dashes in it rather than none you can
    * currently get to -- if any of them ever comes back, it comes back rewritten.
@@ -1220,12 +1350,153 @@
   }
 
   // -------------------------------------------------------------------------
-  // Taken off the site: the Book page, the safety brief, and four FAQ entries
+  // The Private Parties page, where the Book page was
   // -------------------------------------------------------------------------
 
-  function isHiddenNavLabel(label) {
-    return HIDDEN_NAV_LABELS.indexOf(normalise(label)) !== -1;
+  /**
+   * The nav and footer items that opened the Book page, relabelled. Their
+   * handler is the bundle's own and still opens that page, which is now the
+   * party page; see PARTY_NAV_LABEL for why the label has to change too.
+   */
+  function renameBookLinks() {
+    var links = document.querySelectorAll('.navlinks .nav-link, .footlink');
+    for (var i = 0; i < links.length; i++) {
+      if (normalise(links[i].textContent) === BUNDLE_BOOK_LABEL) {
+        setText(links[i], PARTY_NAV_LABEL);
+      }
+    }
   }
+
+  /**
+   * The page's h1, matched on either heading: the bundle's, on a page that has
+   * just rendered, or ours, on one this has already rewritten.
+   */
+  function partyHeading() {
+    var headings = document.querySelectorAll('h1.display');
+    for (var i = 0; i < headings.length; i++) {
+      var text = normalise(headings[i].textContent);
+      if (text === BUNDLE_BOOK_HEADING || text === normalise(PARTY_HEADING)) return headings[i];
+    }
+    return null;
+  }
+
+  function eyebrow(text) {
+    var row = el('div', 'eyebrow');
+    row.appendChild(el('span', 'dot'));
+    row.appendChild(el('span', 'tag tag-o', text));
+    return row;
+  }
+
+  function bulletList(items, className) {
+    var list = el('ul', className);
+    for (var i = 0; i < items.length; i++) list.appendChild(el('li', null, items[i]));
+    return list;
+  }
+
+  function partyPackageCard(pkg) {
+    var card = el('div', 'panel corner cr-party-pkg');
+    card.appendChild(el('div', 'tag', pkg.name));
+    card.appendChild(el('div', 'display cr-party-price', pkg.price));
+    card.appendChild(bulletList(pkg.lines, 'cr-party-list'));
+    return card;
+  }
+
+  function partyPolicy(policy) {
+    var panel = el('div', 'panel cr-party-policy');
+    panel.appendChild(el('h3', 'cond', policy.title));
+    for (var i = 0; i < policy.paras.length; i++) {
+      panel.appendChild(el('p', null, policy.paras[i]));
+      if (i === 0 && policy.list) panel.appendChild(bulletList(policy.list, 'cr-party-list'));
+    }
+    if (policy.link) {
+      var link = externalLink(policy.link.href, 'link-u cr-party-link');
+      link.textContent = policy.link.label;
+      panel.appendChild(link);
+    }
+    return panel;
+  }
+
+  function partySection() {
+    var section = el('div', 'sec cr-party');
+    var wrap = el('div', 'wrap');
+
+    wrap.appendChild(eyebrow('01 / Packages'));
+    wrap.appendChild(el('h2', 'display cr-party-h2', 'Pick your session'));
+
+    var packages = el('div', 'cr-party-pkgs');
+    for (var i = 0; i < PARTY_PACKAGES.length; i++) {
+      packages.appendChild(partyPackageCard(PARTY_PACKAGES[i]));
+    }
+    wrap.appendChild(packages);
+
+    var includes = el('div', 'panel cr-party-includes');
+    includes.appendChild(el('div', 'tag tag-o', 'Both packages include'));
+    includes.appendChild(bulletList(PARTY_INCLUDES, 'cr-party-list'));
+    wrap.appendChild(includes);
+
+    wrap.appendChild(bulletList(PARTY_PACKAGE_NOTES, 'cr-party-notes'));
+
+    var cta = el('div', 'cr-waiver-cta cr-party-cta corner');
+    var copy = el('div');
+    copy.appendChild(el('div', 'tag tag-o', '// Booking request'));
+    copy.appendChild(el('h3', 'cond', 'Request a Private Party'));
+    copy.appendChild(
+      el(
+        'p',
+        null,
+        'We confirm the date, gear availability and your final quote before ' +
+          'collecting any payment. Please include:',
+      ),
+    );
+    copy.appendChild(bulletList(PARTY_REQUEST_ITEMS, 'cr-party-list'));
+    cta.appendChild(copy);
+    var button = externalLink(PARTY_FORM_URL, 'btn');
+    button.textContent = 'Request a Private Party →';
+    cta.appendChild(button);
+    wrap.appendChild(cta);
+
+    wrap.appendChild(eyebrow('02 / Before you book'));
+    wrap.appendChild(el('h2', 'display cr-party-h2', 'Booking details'));
+
+    var policies = el('div', 'cr-party-policies');
+    for (var j = 0; j < PARTY_POLICIES.length; j++) {
+      policies.appendChild(partyPolicy(PARTY_POLICIES[j]));
+    }
+    wrap.appendChild(policies);
+
+    section.appendChild(wrap);
+    return section;
+  }
+
+  /**
+   * Rewrites the Book page's header and puts the party page under it.
+   *
+   * The bundle's booking form and its confirmation screen are each a `.sec`
+   * under the header. Both are hidden rather than removed, the same as every
+   * other node of the bundle's taken off the page here, and ours is appended
+   * beside them.
+   */
+  function enhancePartyPage() {
+    var heading = partyHeading();
+    var header = heading && heading.closest ? heading.closest('.wrap') : null;
+    var page = header && header.parentElement ? plainParent(header.parentElement) : null;
+    if (!page) return; // not the party page
+
+    setText(header.querySelector('.eyebrow .tag'), PARTY_EYEBROW);
+    setText(heading, PARTY_HEADING);
+    setText(header.querySelector('p'), PARTY_INTRO);
+
+    var sections = page.querySelectorAll('.sec');
+    for (var i = 0; i < sections.length; i++) {
+      if (!sections[i].classList.contains('cr-party')) setClass(sections[i], 'cr-hidden', true);
+    }
+
+    if (!page.querySelector('.cr-party')) page.appendChild(partySection());
+  }
+
+  // -------------------------------------------------------------------------
+  // Taken off the site: the safety brief, and four FAQ entries
+  // -------------------------------------------------------------------------
 
   /**
    * Adds or removes a class only when it would actually change, because these
@@ -1237,15 +1508,6 @@
     if (node.classList.contains(name) === wanted) return;
     if (wanted) node.classList.add(name);
     else node.classList.remove(name);
-  }
-
-  /* Hidden rather than deleted: these are React's own nodes, and it puts back
-     anything removed from under it on the next render. */
-  function hideRemovedNav() {
-    var links = document.querySelectorAll('.navlinks .nav-link, .footlink');
-    for (var i = 0; i < links.length; i++) {
-      if (isHiddenNavLabel(links[i].textContent)) setClass(links[i], 'cr-hidden', true);
-    }
   }
 
   /**
@@ -1480,11 +1742,9 @@
     head.appendChild(close);
     panel.appendChild(head);
 
-    // Mirrors whatever the bundle currently has in its (hidden) nav bar, minus
-    // the pages that have been taken off the site.
+    // Mirrors whatever the bundle currently has in its (hidden) nav bar.
     var links = document.querySelectorAll('.navlinks .nav-link');
     for (var i = 0; i < links.length; i++) {
-      if (isHiddenNavLabel(links[i].textContent)) continue;
       panel.appendChild(
         menuItem(links[i].textContent, links[i].className.indexOf('on') !== -1),
       );
@@ -1658,7 +1918,7 @@
     queued = false;
     try {
       ensureStyles();
-      hideRemovedNav();
+      renameBookLinks();
       hideRemovedFaqs();
       hideSafetyBrief();
       enhanceNav();
@@ -1674,6 +1934,7 @@
       enhanceSchedules();
       enhanceGamesPage();
       enhanceGames();
+      enhancePartyPage();
       rewriteEmDashes();
     } catch (err) {
       // A broken enhancement must not take the page down with it.

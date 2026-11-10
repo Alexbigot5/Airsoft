@@ -51,14 +51,43 @@ app.get('/index.html', (c) => c.redirect('/', 301));
  * replaces the entire document once it unpacks, so this copy only styles the
  * loading splash, and the script puts it back afterwards.
  */
+const SITE_TITLE = 'Coyote Ridge Airsoft';
+const SITE_DESCRIPTION =
+  'Outdoor airsoft field in Eugene, Oregon. See upcoming game days and book your spot.';
+
+function escapeAttr(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
 app.get('/', async (c) => {
   const asset = await c.env.ASSETS.fetch(new Request(new URL('/index.html', c.req.url)));
   if (!asset.ok) return asset;
 
+  const origin = new URL(c.req.url).origin;
+  const meta = [
+    ['name', 'description', SITE_DESCRIPTION],
+    ['property', 'og:type', 'website'],
+    ['property', 'og:site_name', SITE_TITLE],
+    ['property', 'og:title', SITE_TITLE],
+    ['property', 'og:description', SITE_DESCRIPTION],
+    ['property', 'og:url', `${origin}/`],
+    ['property', 'og:image', `${origin}/img/game-day-group.jpg`],
+    ['name', 'twitter:card', 'summary_large_image'],
+  ]
+    .map(([attr, key, value]) => `<meta ${attr}="${key}" content="${escapeAttr(value)}">`)
+    .join('');
+
   return new HTMLRewriter()
+    // The bundled export ships a placeholder <title>, and link-preview crawlers
+    // don't run JavaScript, so the real title and preview tags go in here.
+    .on('title', {
+      element(el) {
+        el.setInnerContent(SITE_TITLE);
+      },
+    })
     .on('head', {
       element(el) {
-        el.append('<link rel="stylesheet" href="/site-enhance.css" id="cr-enhance-css">', {
+        el.append('<link rel="stylesheet" href="/site-enhance.css" id="cr-enhance-css">' + meta, {
           html: true,
         });
       },

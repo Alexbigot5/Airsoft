@@ -1916,6 +1916,8 @@
   function apply() {
     queued = false;
     try {
+      // The unpacked bundle has no title of its own; keep the tab right.
+      if (document.title !== 'Coyote Ridge Airsoft') document.title = 'Coyote Ridge Airsoft';
       ensureStyles();
       renameBookLinks();
       hideRemovedFaqs();

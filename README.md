@@ -335,12 +335,10 @@ up on the roster for staff to resolve.
 - **The About page shows the field's own photographs.** The export shipped seven
   stock ones there: the card beside the opening copy, and six in the "On the
   field" grid. `ABOUT_CARD` and `ABOUT_GALLERY` in `public/site-enhance.js` are
-  where they are set, with the files in `public/img/`. The grid is three columns
-  and the bundle draws six cells for it; entries past the sixth get a cell of
-  their own. The spans have to add up to whole rows: the bundle's first cell is
-  four cells' worth and a `tall: true` entry is two, so the eight photos come to
-  twelve — four full rows, no ragged tail. Adding or removing one means
-  re-checking that.
+  where they are set, with the files in `public/img/`. The bundle's grid is
+  hidden and the photos sit in a single row that scrolls sideways, so there is
+  no row arithmetic: adding a photo is adding one entry, with `portrait: true`
+  for one taken upright.
 - **The nav and the footer show the field's badge.** It replaces the export's
   "CR" tiles, and it is the one file this repo expects to be there and does not
   ship a fallback for in code: `LOGO_SRC` in `public/site-enhance.js` points at

@@ -140,15 +140,6 @@
    */
   var EVENTS = [
     {
-      mon: 'NOV',
-      dd: '14',
-      day: 'SAT',
-      title: 'Open Play',
-      time: '1:45 PM – 8:00 PM',
-      chips: ['Gates 12:00–1:00 PM, no late entry'],
-      url: 'https://form.jotform.com/263005452356149',
-    },
-    {
       mon: 'DEC',
       dd: '12',
       day: 'SAT',
@@ -332,11 +323,11 @@
     'structures and the players who show up for them.';
 
   /* Counts what is in EVENTS, so it is rewritten whenever that list changes.
-     There is no gates line: both days' gate runs 12:00-1:00 PM for a 1:45 PM
+     There is no gates line: the day's gate runs 12:00-1:00 PM for a 1:45 PM
      start, not the 60 minutes before first call the older open play days
-     kept, and that window is on each row's own chip. */
+     kept, and that window is on the row's own chip. */
   var SCHEDULE_INTRO =
-    'Two open play days, and everyone is welcome. Games run rain or shine.';
+    'One open play day, and everyone is welcome. Games run rain or shine.';
 
   var SCHEDULE_DISCLAIMER = 'Dates subject to change due to weather or field conditions.';
 

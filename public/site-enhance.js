@@ -307,6 +307,83 @@
       src: '/img/staging-break.jpg',
       alt: 'Players regrouping by the netting between games',
     },
+    {
+      src: '/img/group-walls-wide.jpg',
+      alt: 'A big game day group photo in front of the wooden walls',
+    },
+    {
+      src: '/img/ghillie-tire-yard.jpg',
+      alt: 'Two players in ghillie suits pushing past the tire stacks',
+    },
+    {
+      src: '/img/tank-cover-walk.jpg',
+      alt: 'A young player walking the length of a big black tank used as cover',
+    },
+    {
+      src: '/img/ghillie-squad-trail.jpg',
+      alt: 'Four players in ghillie suits standing together on the trail',
+      portrait: true,
+    },
+    {
+      src: '/img/prone-blue-barrel.jpg',
+      alt: 'A player prone in a boonie hat beside the blue and white barrels',
+    },
+    {
+      src: '/img/costume-flag-objective.jpg',
+      alt: 'A player in a red superhero costume holding the flag with a prop minigun',
+    },
+    {
+      src: '/img/night-game-pair.jpg',
+      alt: 'Two players in full kit with night vision at a night game',
+      portrait: true,
+    },
+    {
+      src: '/img/hoodie-tire-wall.jpg',
+      alt: 'A player kneeling between a tree and a tire wall, rifle up',
+    },
+    {
+      src: '/img/plywood-pair.jpg',
+      alt: 'Two players stacked behind a plywood barricade',
+    },
+    {
+      src: '/img/canopy-lineup.jpg',
+      alt: 'Players lined up in front of the staging canopy',
+    },
+    {
+      src: '/img/yellow-shirt-tire.jpg',
+      alt: 'A player in a yellow shirt slipping past a giant tire',
+    },
+    {
+      src: '/img/night-structure-exit.jpg',
+      alt: 'A player coming out of a wooden structure at night, pistol up',
+      portrait: true,
+    },
+    {
+      src: '/img/drone-overwatch.jpg',
+      alt: 'A player in black beside a structure as a drone flies past',
+    },
+    {
+      src: '/img/barrel-stack-kneel.jpg',
+      alt: 'A player kneeling behind a stack of blue oil drums',
+    },
+    {
+      src: '/img/group-mock-casualty.jpg',
+      alt: 'A team posing behind a teammate playing dead in the dirt',
+      portrait: true,
+    },
+    {
+      src: '/img/fence-corner-kneel.jpg',
+      alt: 'A player kneeling by a wooden fence among the autumn leaves',
+    },
+    {
+      src: '/img/treeline-advance.jpg',
+      alt: 'A player advancing through the autumn trees, rifle up',
+    },
+    {
+      src: '/img/night-costume-lineup.jpg',
+      alt: 'Players lined up by the fence at a night game, one in a superhero costume',
+      portrait: true,
+    },
   ];
 
   /**
